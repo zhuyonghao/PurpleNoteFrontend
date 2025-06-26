@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+  background-color: #f9fafb;
+}
+
+.waterfall {
+  column-count: 2;
+  column-gap: 16px;
+  padding: 16px;
+}
+
+.waterfall-item {
+  break-inside: avoid;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 768px) {
+  .waterfall {
+    column-count: 3;
+  }
+}
+
+@media (min-width: 1024px) {
+  .waterfall {
+    column-count: 4;
+  }
+}

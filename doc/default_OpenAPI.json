@@ -1,0 +1,1321 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "OpenAPI definition",
+    "version": "v0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "关注模块",
+      "description": "用户关系管理"
+    },
+    {
+      "name": "点赞模块",
+      "description": "点赞"
+    },
+    {
+      "name": "内容模块",
+      "description": "内容增删改查"
+    },
+    {
+      "name": "用户模块",
+      "description": "用户认证和个人主页修改"
+    }
+  ],
+  "paths": {
+    "/users/profile": {
+      "get": {
+        "tags": [
+          "用户模块"
+        ],
+        "summary": "查询个人主页接口",
+        "operationId": "getUserProfile",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultProfileVO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "用户模块"
+        ],
+        "summary": "修改个人主页接口",
+        "operationId": "updateUserProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/contents": {
+      "put": {
+        "tags": [
+          "内容模块"
+        ],
+        "summary": "修改内容接口",
+        "operationId": "updateContent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentUpdateDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "内容模块"
+        ],
+        "summary": "发布内容接口",
+        "operationId": "createContent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentCreateDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultContentVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/upload/avatar": {
+      "post": {
+        "tags": [
+          "用户模块"
+        ],
+        "summary": "上传用户头像接口",
+        "operationId": "uploadAvatar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "avatar"
+                ],
+                "type": "object",
+                "properties": {
+                  "avatar": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/register": {
+      "post": {
+        "tags": [
+          "用户模块"
+        ],
+        "summary": "用户注册接口",
+        "operationId": "register",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/login": {
+      "post": {
+        "tags": [
+          "用户模块"
+        ],
+        "summary": "用户登录接口",
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/likes/{contentId}": {
+      "post": {
+        "tags": [
+          "点赞模块"
+        ],
+        "summary": "点赞内容接口",
+        "operationId": "likeContent",
+        "parameters": [
+          {
+            "name": "contentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "点赞模块"
+        ],
+        "summary": "取消点赞接口",
+        "operationId": "cancelLike",
+        "parameters": [
+          {
+            "name": "contentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/follows/{followedId}": {
+      "post": {
+        "tags": [
+          "关注模块"
+        ],
+        "summary": "关注用户接口",
+        "operationId": "followUser",
+        "parameters": [
+          {
+            "name": "followedId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "关注模块"
+        ],
+        "summary": "取消关注接口",
+        "operationId": "unfollowUser",
+        "parameters": [
+          {
+            "name": "followedId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/contents/upload/media": {
+      "post": {
+        "tags": [
+          "内容模块"
+        ],
+        "summary": "上传媒体内容接口",
+        "operationId": "uploadMedia",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "media"
+                ],
+                "type": "object",
+                "properties": {
+                  "media": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/likes/users/{userId}": {
+      "get": {
+        "tags": [
+          "点赞模块"
+        ],
+        "summary": "获取用户点赞内容列表",
+        "operationId": "getUserLikes",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPageResultContentVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/likes/status/{contentId}": {
+      "get": {
+        "tags": [
+          "点赞模块"
+        ],
+        "summary": "获取点赞状态接口",
+        "operationId": "getLikeStatus",
+        "parameters": [
+          {
+            "name": "contentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/likes/rank": {
+      "get": {
+        "tags": [
+          "点赞模块"
+        ],
+        "summary": "点赞排行榜",
+        "operationId": "getLikeRank",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultListContentLikeVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/follows/{userId}/following/count": {
+      "get": {
+        "tags": [
+          "关注模块"
+        ],
+        "summary": "获取用户关注数接口",
+        "operationId": "getFollowingCount",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultLong"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/follows/{userId}/followers/count": {
+      "get": {
+        "tags": [
+          "关注模块"
+        ],
+        "summary": "获取用户粉丝数接口",
+        "operationId": "getFollowerCount",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultLong"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/follows/users/{userId}/following": {
+      "get": {
+        "tags": [
+          "关注模块"
+        ],
+        "summary": "获取用户关注列表",
+        "operationId": "getFollowingList",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPageResultUserVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/follows/users/{userId}/followers": {
+      "get": {
+        "tags": [
+          "关注模块"
+        ],
+        "summary": "获取用户粉丝列表",
+        "operationId": "getFollowersList",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPageResultUserVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/follows/mutual/{targetUserId}": {
+      "get": {
+        "tags": [
+          "关注模块"
+        ],
+        "summary": "获取共同关注用户列表",
+        "operationId": "getMutualFollows",
+        "parameters": [
+          {
+            "name": "targetUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPageResultUserVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/follows/isFollow/{followedId}": {
+      "get": {
+        "tags": [
+          "关注模块"
+        ],
+        "summary": "获取关注状态接口",
+        "operationId": "getFollowStatus",
+        "parameters": [
+          {
+            "name": "followedId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultBoolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/contents/{id}": {
+      "get": {
+        "tags": [
+          "内容模块"
+        ],
+        "summary": "查看内容详情接口",
+        "operationId": "getContent",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultContentVO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "内容模块"
+        ],
+        "summary": "删除内容接口",
+        "operationId": "deleteContent",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/contents/page": {
+      "get": {
+        "tags": [
+          "内容模块"
+        ],
+        "summary": "分页查询内容接口",
+        "operationId": "getContentPage",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPageResultContentVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ProfileDTO": {
+        "type": "object",
+        "properties": {
+          "avatarUrl": {
+            "type": "string",
+            "description": "头像URL"
+          },
+          "bio": {
+            "type": "string",
+            "description": "个人简介"
+          }
+        },
+        "description": "要修改的资料参数"
+      },
+      "Result": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "状态码",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string",
+            "description": "响应消息"
+          },
+          "data": {
+            "type": "object",
+            "description": "响应数据"
+          }
+        },
+        "description": "统一响应体"
+      },
+      "ContentUpdateDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "内容ID",
+            "format": "int64"
+          },
+          "title": {
+            "type": "string",
+            "description": "内容标题"
+          },
+          "text": {
+            "type": "string",
+            "description": "内容正文"
+          },
+          "mediaUrl": {
+            "type": "string",
+            "description": "媒体文件URL（图片/视频）"
+          }
+        },
+        "description": "内容修改DTO"
+      },
+      "RegisterDTO": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "用户名"
+          },
+          "password": {
+            "type": "string",
+            "description": "密码"
+          }
+        },
+        "description": "注册参数"
+      },
+      "LoginDTO": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "用户名"
+          },
+          "password": {
+            "type": "string",
+            "description": "密码"
+          }
+        },
+        "description": "登录参数"
+      },
+      "ContentCreateDTO": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "内容标题",
+            "refType": null
+          },
+          "text": {
+            "type": "string",
+            "description": "内容正文",
+            "refType": null
+          },
+          "mediaUrl": {
+            "type": "string",
+            "description": "媒体文件URL（图片/视频）",
+            "refType": null
+          }
+        },
+        "description": "内容发布DTO"
+      },
+      "ContentVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "内容ID",
+            "format": "int64",
+            "refType": null
+          },
+          "userName": {
+            "type": "string",
+            "description": "作者用户名",
+            "refType": null
+          },
+          "title": {
+            "type": "string",
+            "description": "内容标题",
+            "refType": null
+          },
+          "text": {
+            "type": "string",
+            "description": "内容正文",
+            "refType": null
+          },
+          "mediaUrl": {
+            "type": "string",
+            "description": "媒体文件URL（图片/视频）",
+            "refType": null
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间",
+            "format": "date-time",
+            "refType": null
+          }
+        },
+        "description": "内容VO"
+      },
+      "ResultContentVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "状态码",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string",
+            "description": "响应消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ContentVO"
+          }
+        },
+        "description": "统一响应体"
+      },
+      "ProfileVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "用户ID",
+            "format": "int64"
+          },
+          "username": {
+            "type": "string",
+            "description": "用户名"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "description": "头像URL"
+          },
+          "bio": {
+            "type": "string",
+            "description": "个人简介"
+          }
+        },
+        "description": "资料视图"
+      },
+      "ResultProfileVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "状态码",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string",
+            "description": "响应消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ProfileVO"
+          }
+        },
+        "description": "统一响应体"
+      },
+      "PageResultContentVO": {
+        "type": "object",
+        "properties": {
+          "currentPage": {
+            "type": "integer",
+            "description": "当前页码",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "description": "每页数量",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "description": "总记录数",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "description": "总页数",
+            "format": "int32"
+          },
+          "list": {
+            "type": "array",
+            "description": "分页数据列表",
+            "items": {
+              "$ref": "#/components/schemas/ContentVO"
+            }
+          }
+        },
+        "description": "分页结果"
+      },
+      "ResultPageResultContentVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "状态码",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string",
+            "description": "响应消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResultContentVO"
+          }
+        },
+        "description": "统一响应体"
+      },
+      "ContentLikeVO": {
+        "type": "object",
+        "properties": {
+          "contentId": {
+            "type": "integer",
+            "description": "内容ID",
+            "format": "int64"
+          },
+          "userName": {
+            "type": "string",
+            "description": "作者用户名"
+          },
+          "contentTitle": {
+            "type": "string",
+            "description": "内容标题"
+          },
+          "likeCount": {
+            "type": "integer",
+            "description": "点赞数",
+            "format": "int64"
+          }
+        },
+        "description": "排行榜数据VO"
+      },
+      "ResultListContentLikeVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "状态码",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string",
+            "description": "响应消息"
+          },
+          "data": {
+            "type": "array",
+            "description": "响应数据",
+            "items": {
+              "$ref": "#/components/schemas/ContentLikeVO"
+            }
+          }
+        },
+        "description": "统一响应体"
+      },
+      "ResultLong": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "状态码",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string",
+            "description": "响应消息"
+          },
+          "data": {
+            "type": "integer",
+            "description": "响应数据",
+            "format": "int64"
+          }
+        },
+        "description": "统一响应体"
+      },
+      "PageResultUserVO": {
+        "type": "object",
+        "properties": {
+          "currentPage": {
+            "type": "integer",
+            "description": "当前页码",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "description": "每页数量",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "description": "总记录数",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "description": "总页数",
+            "format": "int32"
+          },
+          "list": {
+            "type": "array",
+            "description": "分页数据列表",
+            "items": {
+              "$ref": "#/components/schemas/UserVO"
+            }
+          }
+        },
+        "description": "分页结果"
+      },
+      "ResultPageResultUserVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "状态码",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string",
+            "description": "响应消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResultUserVO"
+          }
+        },
+        "description": "统一响应体"
+      },
+      "UserVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "用户ID",
+            "format": "int64"
+          },
+          "username": {
+            "type": "string",
+            "description": "用户名"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "description": "头像URL"
+          },
+          "bio": {
+            "type": "string",
+            "description": "个人简介"
+          }
+        },
+        "description": "资料视图"
+      },
+      "ResultBoolean": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "状态码",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string",
+            "description": "响应消息"
+          },
+          "data": {
+            "type": "boolean",
+            "description": "响应数据"
+          }
+        },
+        "description": "统一响应体"
+      }
+    }
+  },
+  "x-openapi": {
+    "x-setting": {
+      "customCode": 200,
+      "language": "zh-CN",
+      "enableSwaggerModels": true,
+      "swaggerModelName": "Swagger Models",
+      "enableReloadCacheParameter": false,
+      "enableAfterScript": true,
+      "enableDocumentManage": true,
+      "enableVersion": false,
+      "enableRequestCache": true,
+      "enableFilterMultipartApis": false,
+      "enableFilterMultipartApiMethodType": "POST",
+      "enableHost": false,
+      "enableHostText": "",
+      "enableDynamicParameter": false,
+      "enableDebug": true,
+      "enableFooter": true,
+      "enableFooterCustom": false,
+      "enableSearch": true,
+      "enableOpenApi": true,
+      "enableHomeCustom": false,
+      "enableGroup": true,
+      "enableResponseCode": true
+    },
+    "x-markdownFiles": []
+  }
+}
