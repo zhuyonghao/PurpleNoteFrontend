@@ -1,5 +1,5 @@
 <template>
-  <MainLayout>
+  <PublishLayout>
     <!-- 顶部导航 -->
     <header class="bg-white shadow-sm sticky top-0 z-50">
       <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -89,11 +89,11 @@
         </div>
       </div>
     </div>
-  </MainLayout>
+  </PublishLayout>
 </template>
 
 <script setup>
-import MainLayout from '@/layouts/MainLayout.vue'
+import PublishLayout from '@/layouts/PublishLayout.vue'
 import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
