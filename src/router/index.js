@@ -58,12 +58,13 @@ const routes = [
     component: () => import('@/views/ContentDetail.vue'),
     meta: { requiresAuth: true }
   },
-  {
-    path: '/search',
-    name: 'Search',
-    component: () => import('@/views/Search.vue'),
-    meta: { requiresAuth: true }
-  },
+  // 临时注释掉搜索路由，直到Search.vue文件创建完成
+  // {
+  //   path: '/search',
+  //   name: 'Search',
+  //   component: () => import('@/views/Search.vue'),
+  //   meta: { requiresAuth: true }
+  // },
   // 404页面路由 - 必须放在最后
   {
     path: '/:pathMatch(.*)*',

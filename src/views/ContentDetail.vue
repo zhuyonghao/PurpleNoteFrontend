@@ -27,8 +27,8 @@
           
           <!-- 作者信息 -->
           <div class="flex items-center justify-between border-t pt-4">
-            <div class="flex items-center space-x-3">
-              <el-avatar :src="content.author?.avatarUrl" :size="40">
+            <div class="flex items-center space-x-3 cursor-pointer" @click="handleAuthorClick">
+              <el-avatar :src="content.userAvatarUrl" :size="40">
                 <el-icon><User /></el-icon>
               </el-avatar>
               <div>
@@ -77,13 +77,16 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { useUserStore } from '@/stores/user'
 import { getContent } from '@/api/content'
 import { likeContent, cancelLike } from '@/api/like'
 import { User, Star, StarFilled, ArrowLeft, Share, Loading, Warning } from '@element-plus/icons-vue'
 
 const route = useRoute()
+const router = useRouter()
+const userStore = useUserStore()
 const content = ref(null)
 const loading = ref(true)
 
@@ -153,6 +156,28 @@ const formatDate = (dateString) => {
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+// 处理作者头像点击事件
+const handleAuthorClick = () => {
+  // 添加调试信息
+  console.log('Content data:', content.value)
+  
+  // 使用接口返回的userId进行跳转
+  const userId = content.value?.userId
+  
+  if (!userId) {
+    console.warn('无法获取用户ID')
+    return
+  }
+  
+  // 如果是当前用户，跳转到个人主页
+  if (userId === userStore.userInfo?.id) {
+    router.push('/profile')
+  } else {
+    // 否则跳转到指定用户的主页
+    router.push(`/profile/${userId}`)
+  }
 }
 </script>
 
