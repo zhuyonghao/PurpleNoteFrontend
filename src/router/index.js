@@ -11,19 +11,19 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: () => import('@/views/Login.vue'),
-    meta: { requiresGuest: true }
+    meta: { requiresGuest: true, layout: 'blank' }
   },
   {
-    path: '/register',
+    path: '/register', 
     name: 'Register',
     component: () => import('@/views/Register.vue'),
-    meta: { requiresGuest: true }
+    meta: { requiresGuest: true, layout: 'blank' }
   },
   {
     path: '/home',
-    name: 'Home',
+    name: 'Home', 
     component: () => import('@/views/Home.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, layout: 'main' }
   },
   {
     path: '/publish',

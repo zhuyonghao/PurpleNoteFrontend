@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <MainLayout>
     <!-- 顶部导航 -->
     <header class="bg-white shadow-sm sticky top-0 z-50">
       <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -17,7 +17,7 @@
       </div>
     </header>
 
-    <!-- 用户信息 -->
+    <!-- 用户信息和内容 -->
     <div class="bg-white" v-if="userProfile">
       <div class="max-w-6xl mx-auto px-4 py-6">
         <!-- 头像和基本信息 -->
@@ -122,17 +122,29 @@
         </div>
       </div>
       
+      <!-- 加载更多提示 -->
+      <div v-if="loadingMore" class="text-center py-4">
+        <el-icon class="is-loading mr-2"><Loading /></el-icon>
+        <span class="text-gray-500">加载中...</span>
+      </div>
+      
+      <!-- 没有更多数据提示 -->
+      <div v-else-if="!hasMore && contentList.length > 0" class="text-center py-4">
+        <span class="text-gray-400">没有更多内容了</span>
+      </div>
+      
       <!-- 空状态 -->
-      <div v-if="contentList.length === 0" class="text-center py-16">
+      <div v-if="contentList.length === 0 && !loading" class="text-center py-16">
         <el-icon size="64" class="text-gray-300 mb-4"><Document /></el-icon>
         <p class="text-gray-500">{{ isOwnProfile ? '还没有发布任何内容' : 'TA还没有发布任何内容' }}</p>
       </div>
     </div>
-  </div>
+  </MainLayout>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import MainLayout from '@/layouts/MainLayout.vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
@@ -148,16 +160,14 @@ const userStore = useUserStore()
 const userProfile = ref(null)
 const contentList = ref([])
 const loading = ref(true)
+const loadingMore = ref(false)
 const activeTab = ref('notes')
+const currentPage = ref(1)
+const hasMore = ref(true)
+const pageSize = 10
 
 const isOwnProfile = computed(() => {
   return !route.params.id || route.params.id == userStore.userInfo?.id
-})
-
-onMounted(async () => {
-  // 先获取用户信息，再获取用户内容
-  await fetchUserProfile()
-  await fetchUserContent()
 })
 
 const fetchUserProfile = async () => {
@@ -181,21 +191,24 @@ const fetchUserProfile = async () => {
   }
 }
 
-const fetchUserContent = async () => {
+const fetchUserContent = async (page = 1, append = false) => {
   try {
+    if (page === 1) {
+      loading.value = true
+    } else {
+      loadingMore.value = true
+    }
+    
     let userId
     
     if (isOwnProfile.value) {
-      // 如果是自己的主页，从用户信息中获取ID
       if (userProfile.value && userProfile.value.id) {
         userId = userProfile.value.id
       } else {
-        // 如果userProfile还没有加载，先获取用户信息
         await fetchUserProfile()
         userId = userProfile.value?.id
       }
     } else {
-      // 如果是其他用户的主页，使用路由参数中的ID
       userId = route.params.id
     }
     
@@ -204,33 +217,80 @@ const fetchUserContent = async () => {
       return
     }
     
-    console.log('正在获取用户内容，用户ID:', userId)
+    console.log('正在获取用户内容，用户ID:', userId, '页码:', page)
     
-    // 调用内容分页接口，传入用户ID
     const params = {
       userId: userId,
-      page: 1,
-      size: 10
+      page: page,
+      size: pageSize
     }
     
     const response = await getContentPage(params)
     console.log('获取到的内容数据:', response)
     
-    // 修改数据处理逻辑：list在response的根级别
     if (response && response.list) {
-      contentList.value = response.list
+      if (append) {
+        contentList.value = [...contentList.value, ...response.list]
+      } else {
+        contentList.value = response.list
+      }
+      
+      // 检查是否还有更多数据
+      hasMore.value = response.list.length === pageSize && page < (response.totalPages || 999)
+      currentPage.value = page
+      
       console.log('设置内容列表:', contentList.value)
+      console.log('是否还有更多:', hasMore.value)
     } else {
       console.log('没有找到内容数据')
-      contentList.value = []
+      if (!append) {
+        contentList.value = []
+      }
+      hasMore.value = false
     }
   } catch (error) {
     ElMessage.error('获取用户内容失败')
     console.error('获取用户内容失败:', error)
+    hasMore.value = false
   } finally {
     loading.value = false
+    loadingMore.value = false
   }
 }
+
+// 加载更多内容
+const loadMore = async () => {
+  if (loadingMore.value || !hasMore.value) return
+  
+  const nextPage = currentPage.value + 1
+  await fetchUserContent(nextPage, true)
+}
+
+// 滚动事件处理
+const handleScroll = () => {
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+  const windowHeight = window.innerHeight
+  const documentHeight = document.documentElement.scrollHeight
+  
+  // 当滚动到距离底部100px时开始加载
+  if (scrollTop + windowHeight >= documentHeight - 100) {
+    loadMore()
+  }
+}
+
+onMounted(async () => {
+  await fetchUserProfile()
+  await fetchUserContent()
+  
+  // 添加滚动事件监听
+  window.addEventListener('scroll', handleScroll)
+})
+
+// 组件卸载时移除事件监听
+import { onUnmounted } from 'vue'
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 
 const handleFollow = async () => {
   try {

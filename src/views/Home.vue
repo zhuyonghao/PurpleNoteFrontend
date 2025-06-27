@@ -1,74 +1,66 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-    <!-- 网页端布局 -->
-    <el-container class="min-h-screen">
-      <!-- 导航栏 -->
-      <NavigationBar />
+  <MainLayout>
+    <!-- 顶部工具栏 -->
+    <el-header class="bg-white shadow-sm border-b border-gray-100 flex items-center justify-between px-6" height="64px">
+      <h1 class="text-xl font-semibold text-gray-800">首页</h1>
+      <div class="flex items-center space-x-3">
+        <el-button 
+          icon="Bell" 
+          circle 
+          :badge="hasNotification ? '1' : null" 
+          @click="handleNotificationClick" 
+        />
+        <el-button icon="Refresh" circle @click="refreshContent" />
+      </div>
+    </el-header>
+    
+    <!-- 内容区域 -->
+    <div class="p-6 overflow-auto" style="height: calc(100vh - 64px);">
+      <!-- 瀑布流内容 -->
+      <WaterfallContainer 
+        :items="contentStore.contentList || []"
+        :has-more="contentStore.hasMore"
+        @load-more="loadMore"
+      >
+        <template #default="{ item }">
+          <ContentCard 
+            :content="item" 
+            @like="handleLike" 
+            @click="viewDetail" 
+            class="content-card-hover"
+          />
+        </template>
+      </WaterfallContainer>
       
-      <!-- 主要内容区域 -->
-      <el-main class="p-0">
-        <!-- 顶部工具栏 -->
-        <el-header class="bg-white shadow-sm border-b border-gray-100 flex items-center justify-between px-6" height="64px">
-          <h1 class="text-xl font-semibold text-gray-800">首页</h1>
-          <div class="flex items-center space-x-3">
-            <el-button 
-              icon="Bell" 
-              circle 
-              :badge="hasNotification ? '1' : null" 
-              @click="handleNotificationClick" 
-            />
-            <el-button icon="Refresh" circle @click="refreshContent" />
-          </div>
-        </el-header>
-        
-        <!-- 内容区域 -->
-        <div class="p-6 overflow-auto" style="height: calc(100vh - 64px);">
-          <!-- 瀑布流内容 -->
-          <WaterfallContainer 
-            :items="contentStore.contentList || []"
-            :has-more="contentStore.hasMore"
-            @load-more="loadMore"
-          >
-            <template #default="{ item }">
-              <ContentCard 
-                :content="item" 
-                @like="handleLike" 
-                @click="viewDetail" 
-                class="content-card-hover"
-              />
-            </template>
-          </WaterfallContainer>
-          
-          <!-- 加载状态 -->
-          <LoadingState 
-            v-if="contentStore.loading" 
-            message="精彩内容加载中..." 
-          />
-          
-          <!-- 没有更多内容 -->
-          <div v-if="!contentStore.hasMore && (contentStore.contentList?.length || 0) > 0" class="text-center py-12">
-            <div class="no-more-content">
-              <el-icon class="text-4xl text-gray-400 mb-3"><Check /></el-icon>
-              <p class="text-gray-500 font-medium">已经到底了，没有更多内容</p>
-            </div>
-          </div>
-          
-          <!-- 空状态 -->
-          <EmptyState 
-            v-if="!contentStore.loading && (contentStore.contentList?.length || 0) === 0"
-            title="还没有内容"
-            description="成为第一个分享精彩内容的人吧！"
-            :show-button="true"
-            button-text="发布第一篇内容"
-            @button-click="$router.push('/publish')"
-          />
+      <!-- 加载状态 -->
+      <LoadingState 
+        v-if="contentStore.loading" 
+        message="精彩内容加载中..." 
+      />
+      
+      <!-- 没有更多内容 -->
+      <div v-if="!contentStore.hasMore && (contentStore.contentList?.length || 0) > 0" class="text-center py-12">
+        <div class="no-more-content">
+          <el-icon class="text-4xl text-gray-400 mb-3"><Check /></el-icon>
+          <p class="text-gray-500 font-medium">已经到底了，没有更多内容</p>
         </div>
-      </el-main>
-    </el-container>
-  </div>
+      </div>
+      
+      <!-- 空状态 -->
+      <EmptyState 
+        v-if="!contentStore.loading && (contentStore.contentList?.length || 0) === 0"
+        title="还没有内容"
+        description="成为第一个分享精彩内容的人吧！"
+        :show-button="true"
+        button-text="发布第一篇内容"
+        @button-click="$router.push('/publish')"
+      />
+    </div>
+  </MainLayout>
 </template>
 
 <script setup>
+import MainLayout from '@/layouts/MainLayout.vue'
 import { onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'

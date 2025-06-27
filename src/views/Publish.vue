@@ -1,10 +1,10 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <MainLayout>
     <!-- 顶部导航 -->
     <header class="bg-white shadow-sm sticky top-0 z-50">
       <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-        <el-button @click="$router.back()" type="text" class="text-gray-600">
-          <el-icon class="mr-1"><Close /></el-icon>
+        <el-button @click="$router.back()" link class="text-gray-600">
+          <el-icon class="mr-1"><ArrowLeft /></el-icon>
           取消
         </el-button>
         
@@ -38,7 +38,7 @@
             name="media"
           >
             <div v-if="!publishForm.imageUrl" class="upload-placeholder py-12">
-              <el-icon class="text-6xl text-gray-300 mb-4"><Camera /></el-icon>
+              <el-icon class="text-6xl text-gray-300 mb-4"><UploadFilled /></el-icon>
               <div class="text-lg text-gray-600 mb-2">
                 添加图片/视频
               </div>
@@ -85,16 +85,15 @@
                 resize="none"
               />
             </el-form-item>
-            
-            <!-- 移除标签输入区域 -->
           </el-form>
         </div>
       </div>
     </div>
-  </div>
+  </MainLayout>
 </template>
 
 <script setup>
+import MainLayout from '@/layouts/MainLayout.vue'
 import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
@@ -107,21 +106,13 @@ const userStore = useUserStore()
 
 const publishFormRef = ref()
 const publishing = ref(false)
-const newTag = ref('')
 
-// 移除标签相关的响应式数据
 const publishForm = reactive({
   title: '',
   content: '',
   imageUrl: ''
-  // 移除 tags: []
 })
 
-// 移除标签相关的方法
-// 删除 addTag, removeTag 方法
-// 删除 newTag 变量
-
-// 修改发布方法，移除标签数据
 const handlePublish = async () => {
   try {
     const valid = await publishFormRef.value.validate()
@@ -133,7 +124,6 @@ const handlePublish = async () => {
       title: publishForm.title,
       text: publishForm.content,
       mediaUrl: publishForm.imageUrl
-      // 移除 tags 字段
     }
     
     console.log('发布数据:', data)
@@ -147,6 +137,7 @@ const handlePublish = async () => {
     publishing.value = false
   }
 }
+
 const rules = {
   title: [
     { required: true, message: '请输入标题', trigger: 'blur' },
@@ -155,9 +146,6 @@ const rules = {
   content: [
     { required: true, message: '请输入内容描述', trigger: 'blur' },
     { min: 1, max: 500, message: '内容长度在 1 到 500 个字符', trigger: 'blur' }
-  ],
-  imageUrl: [
-    { required: true, message: '请上传图片', trigger: 'change' }
   ]
 }
 
@@ -215,23 +203,6 @@ const handleUploadError = () => {
 
 const removeImage = () => {
   publishForm.imageUrl = ''
-}
-
-const addTag = () => {
-  const tag = newTag.value.trim()
-  if (tag && !publishForm.tags.includes(tag) && publishForm.tags.length < 5) {
-    publishForm.tags.push(tag)
-    newTag.value = ''
-  } else if (publishForm.tags.length >= 5) {
-    ElMessage.warning('最多只能添加5个标签')
-  }
-}
-
-const removeTag = (tag) => {
-  const index = publishForm.tags.indexOf(tag)
-  if (index > -1) {
-    publishForm.tags.splice(index, 1)
-  }
 }
 </script>
 
