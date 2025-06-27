@@ -48,6 +48,13 @@ const routes = [
     name: 'Search',
     component: () => import('@/views/Search.vue'),
     meta: { requiresAuth: true }
+  },
+  // 404页面路由 - 必须放在最后
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('@/views/NotFound.vue'),
+    meta: { layout: 'blank' }
   }
 ]
 
@@ -61,7 +68,7 @@ router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
   
   // 需要登录的页面
-  const requiresAuth = ['Home', 'Profile', 'Publish', 'ContentDetail']
+  const requiresAuth = ['Home', 'Profile', 'Publish', 'ContentDetail', 'Search']
   
   if (requiresAuth.includes(to.name) && !userStore.isLoggedIn) {
     ElMessage.warning('请先登录')
