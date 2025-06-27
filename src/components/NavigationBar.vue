@@ -27,9 +27,9 @@
             <span>首页</span>
           </el-menu-item>
           
-          <el-menu-item index="/search" class="nav-menu-item">
-            <el-icon class="mr-3"><Search /></el-icon>
-            <span>搜索</span>
+          <el-menu-item index="/hot" class="nav-menu-item">
+            <el-icon class="mr-3"><TrendCharts /></el-icon>
+            <span>热门</span>
           </el-menu-item>
           
           <el-menu-item index="/publish" class="nav-menu-item">
@@ -37,9 +37,14 @@
             <span>发布</span>
           </el-menu-item>
           
+          <el-menu-item index="/messages" class="nav-menu-item">
+            <el-icon class="mr-3"><ChatDotRound /></el-icon>
+            <span>消息</span>
+          </el-menu-item>
+          
           <el-menu-item index="/profile" class="nav-menu-item">
             <el-icon class="mr-3"><User /></el-icon>
-            <span>我的</span>
+            <span>我</span>
           </el-menu-item>
         </el-menu>
       </div>
@@ -66,43 +71,20 @@
   <!-- 移动端底部导航栏 -->
   <div class="mobile-nav">
     <div class="bg-white border-t border-gray-200 shadow-lg">
-      <el-menu
-        :default-active="$route.path"
-        mode="horizontal"
-        class="border-none mobile-nav-menu"
-        router
-        background-color="#ffffff"
-        text-color="#6b7280"
-        active-text-color="#9333ea"
-      >
-        <el-menu-item index="/" class="mobile-nav-item">
+      <div class="mobile-nav-menu-custom">
+        <router-link 
+          v-for="item in navItems" 
+          :key="item.path"
+          :to="item.path"
+          class="mobile-nav-item-custom"
+          :class="{ 'active': $route.path === item.path }"
+        >
           <div class="flex flex-col items-center py-2">
-            <el-icon class="text-lg mb-1"><House /></el-icon>
-            <span class="text-xs">首页</span>
+            <component :is="item.icon" class="text-lg mb-1" />
+            <span class="text-xs">{{ item.label }}</span>
           </div>
-        </el-menu-item>
-        
-        <el-menu-item index="/search" class="mobile-nav-item">
-          <div class="flex flex-col items-center py-2">
-            <el-icon class="text-lg mb-1"><Search /></el-icon>
-            <span class="text-xs">搜索</span>
-          </div>
-        </el-menu-item>
-        
-        <el-menu-item index="/publish" class="mobile-nav-item">
-          <div class="flex flex-col items-center py-2">
-            <el-icon class="text-lg mb-1"><Plus /></el-icon>
-            <span class="text-xs">发布</span>
-          </div>
-        </el-menu-item>
-        
-        <el-menu-item index="/profile" class="mobile-nav-item">
-          <div class="flex flex-col items-center py-2">
-            <el-icon class="text-lg mb-1"><User /></el-icon>
-            <span class="text-xs">我的</span>
-          </div>
-        </el-menu-item>
-      </el-menu>
+        </router-link>
+      </div>
     </div>
   </div>
 </template>
@@ -110,13 +92,23 @@
 <script setup>
 import { 
   House, 
-  Search, 
+  TrendCharts, 
   Plus, 
+  ChatDotRound,
   User 
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
+
+// 定义导航项
+const navItems = [
+  { path: '/', icon: House, label: '首页' },
+  { path: '/hot', icon: TrendCharts, label: '热门' },
+  { path: '/publish', icon: Plus, label: '发布' },
+  { path: '/messages', icon: ChatDotRound, label: '消息' },
+  { path: '/profile', icon: User, label: '我' }
+]
 </script>
 
 <style scoped>
@@ -176,11 +168,13 @@ const userStore = useUserStore()
   padding: 0;
   min-height: 60px;
   background-color: #ffffff !important;
+  width: 100%; /* 确保占满宽度 */
+  overflow-x: visible; /* 改为visible，避免内容被隐藏 */
 }
 
 .mobile-nav-item {
   flex: 1;
-  display: flex;
+  display: flex !important;
   justify-content: center;
   align-items: center;
   min-height: 60px;
@@ -188,59 +182,99 @@ const userStore = useUserStore()
   border-radius: 0;
   transition: all 0.3s ease;
   background-color: #ffffff !important;
-}
-
-.mobile-nav-item:hover {
-  background-color: #f9fafb !important;
-}
-
-.mobile-nav-item.is-active {
-  background-color: #faf5ff !important;
-  color: #9333ea !important;
-}
-
-/* 自定义Element Plus Menu样式 */
-:deep(.el-menu-item) {
-  height: 48px;
-  line-height: 48px;
-  margin-bottom: 8px;
-  border-radius: 8px;
-}
-
-:deep(.el-menu-item:hover) {
-  background-color: #f3f4f6;
-}
-
-:deep(.el-menu-item.is-active) {
-  background-color: #faf5ff;
-  color: #9333ea;
-}
-
-:deep(.el-menu-item.is-active::before) {
-  display: none;
+  min-width: 60px; /* 设置最小宽度 */
 }
 
 /* 移动端菜单项样式覆盖 */
 :deep(.mobile-nav-menu .el-menu-item) {
-  min-height: 60px;
-  height: auto;
-  line-height: normal;
-  margin-bottom: 0;
-  border-radius: 0;
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0;
+  min-height: 60px !important;
+  height: auto !important;
+  line-height: normal !important;
+  margin-bottom: 0 !important;
+  border-radius: 0 !important;
+  flex: 1 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 8px 4px !important; /* 增加内边距 */
   background-color: #ffffff !important;
+  min-width: 60px !important; /* 设置最小宽度 */
+  white-space: nowrap !important; /* 防止文字换行 */
+  color: #6b7280 !important; /* 确保文字颜色 */
+}
+
+/* 确保图标和文字显示 */
+:deep(.mobile-nav-menu .el-menu-item .el-icon) {
+  display: block !important;
+  font-size: 18px !important;
+  margin-bottom: 2px !important;
+  color: inherit !important;
+}
+
+:deep(.mobile-nav-menu .el-menu-item span) {
+  display: block !important;
+  font-size: 10px !important;
+  color: inherit !important;
+  line-height: 1 !important;
 }
 
 :deep(.mobile-nav-menu .el-menu-item:hover) {
   background-color: #f9fafb !important;
+  color: #6b7280 !important;
 }
 
 :deep(.mobile-nav-menu .el-menu-item.is-active) {
   background-color: #faf5ff !important;
   color: #9333ea !important;
+}
+
+:deep(.mobile-nav-menu .el-menu-item.is-active .el-icon) {
+  color: #9333ea !important;
+}
+
+:deep(.mobile-nav-menu .el-menu-item.is-active span) {
+  color: #9333ea !important;
+}
+
+/* 移动端自定义导航样式 */
+.mobile-nav-menu-custom {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  min-height: 60px;
+  background-color: #ffffff;
+  width: 100%;
+}
+
+.mobile-nav-item-custom {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60px;
+  text-decoration: none;
+  color: #6b7280;
+  transition: all 0.3s ease;
+  padding: 8px 4px;
+}
+
+.mobile-nav-item-custom:hover {
+  background-color: #f9fafb;
+  color: #6b7280;
+}
+
+.mobile-nav-item-custom.active {
+  background-color: #faf5ff;
+  color: #9333ea;
+}
+
+.mobile-nav-item-custom .text-lg {
+  font-size: 18px;
+  margin-bottom: 2px;
+}
+
+.mobile-nav-item-custom .text-xs {
+  font-size: 10px;
+  line-height: 1;
 }
 </style>
