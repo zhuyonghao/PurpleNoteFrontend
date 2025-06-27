@@ -9,12 +9,12 @@
     </header>
 
     <!-- 内容详情 -->
-    <div class="max-w-4xl mx-auto p-4" v-if="content">
+    <div class="max-w-4xl mx-auto p-4" v-if="content && !loading">
       <div class="bg-white rounded-xl shadow-sm overflow-hidden">
         <!-- 内容图片 -->
         <div class="relative">
           <img 
-            :src="content.imageUrl || '/placeholder.jpg'" 
+            :src="content.mediaUrl || '/placeholder.jpg'" 
             :alt="content.title"
             class="w-full h-auto object-cover max-h-96"
           />
@@ -23,7 +23,7 @@
         <!-- 内容信息 -->
         <div class="p-6">
           <h1 class="text-2xl font-bold text-gray-800 mb-4">{{ content.title }}</h1>
-          <p class="text-gray-600 leading-relaxed mb-6">{{ content.content }}</p>
+          <p class="text-gray-600 leading-relaxed mb-6">{{ content.text }}</p>
           
           <!-- 作者信息 -->
           <div class="flex items-center justify-between border-t pt-4">
@@ -32,8 +32,8 @@
                 <el-icon><User /></el-icon>
               </el-avatar>
               <div>
-                <p class="font-medium text-gray-800">{{ content.author?.nickname || content.author?.username }}</p>
-                <p class="text-sm text-gray-500">{{ formatDate(content.createTime) }}</p>
+                <p class="font-medium text-gray-800">{{ content.userName }}</p>
+                <p class="text-sm text-gray-500">{{ formatDate(content.createdAt) }}</p>
               </div>
             </div>
             
@@ -55,8 +55,22 @@
     </div>
     
     <!-- 加载状态 -->
+    <div v-else-if="loading" class="flex justify-center items-center h-64">
+      <el-icon class="is-loading" size="32">
+        <Loading />
+      </el-icon>
+      <span class="ml-2 text-gray-500">加载中...</span>
+    </div>
+    
+    <!-- 错误状态 -->
     <div v-else class="flex justify-center items-center h-64">
-      <el-loading-spinner size="large" />
+      <div class="text-center">
+        <el-icon size="48" class="text-gray-400 mb-4">
+          <Warning />
+        </el-icon>
+        <p class="text-gray-500">内容加载失败</p>
+        <el-button @click="fetchContent" class="mt-4">重新加载</el-button>
+      </div>
     </div>
   </div>
 </template>
@@ -65,9 +79,9 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { getContentById } from '@/api/content'
+import { getContent } from '@/api/content'
 import { likeContent, cancelLike } from '@/api/like'
-import { User, Star, StarFilled, ArrowLeft, Share } from '@element-plus/icons-vue'
+import { User, Star, StarFilled, ArrowLeft, Share, Loading, Warning } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const content = ref(null)
@@ -80,8 +94,18 @@ onMounted(async () => {
 const fetchContent = async () => {
   try {
     loading.value = true
-    const response = await getContentById(route.params.id)
-    content.value = response.data
+    console.log('正在获取内容ID:', route.params.id)
+    const response = await getContent(route.params.id)
+    console.log('API完整响应:', response)
+    
+    // 直接使用响应数据，不需要通过 .data 属性
+    if (response && response.id) {
+      content.value = response
+      console.log('获取内容详情成功:', response)
+    } else {
+      console.error('API响应数据结构异常:', response)
+      ElMessage.error('数据格式错误')
+    }
   } catch (error) {
     ElMessage.error('获取内容详情失败')
     console.error('获取内容详情失败:', error)
@@ -110,7 +134,7 @@ const handleShare = () => {
   if (navigator.share) {
     navigator.share({
       title: content.value.title,
-      text: content.value.content,
+      text: content.value.text,
       url: window.location.href
     })
   } else {
@@ -131,3 +155,18 @@ const formatDate = (dateString) => {
   })
 }
 </script>
+
+<style scoped>
+.is-loading {
+  animation: rotating 2s linear infinite;
+}
+
+@keyframes rotating {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+</style>

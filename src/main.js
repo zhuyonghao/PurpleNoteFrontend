@@ -17,5 +17,5 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 
 app.use(pinia)
 app.use(router)
-app.use(ElementPlus)
+app.use(ElementPlus) // ElementPlus 已经包含了所有指令，包括 v-infinite-scroll
 app.mount('#app')

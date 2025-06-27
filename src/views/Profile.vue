@@ -3,13 +3,10 @@
     <!-- 顶部导航 -->
     <header class="bg-white shadow-sm sticky top-0 z-50">
       <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-        <div class="flex items-center">
-          <el-button @click="$router.back()" icon="ArrowLeft" circle class="mr-4" />
-          <h1 class="text-lg font-medium">个人主页</h1>
-        </div>
+        <el-button @click="$router.back()" icon="ArrowLeft" circle />
         
         <el-dropdown v-if="isOwnProfile" @command="handleCommand">
-          <el-button icon="More" circle />
+          <el-button icon="Setting" circle />
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item command="edit">编辑资料</el-dropdown-item>
@@ -22,52 +19,85 @@
 
     <!-- 用户信息 -->
     <div class="bg-white" v-if="userProfile">
-      <div class="max-w-6xl mx-auto px-4 py-8">
-        <div class="flex items-start space-x-6">
-          <!-- 头像 -->
-          <el-avatar :src="userProfile.avatarUrl" :size="80">
+      <div class="max-w-6xl mx-auto px-4 py-6">
+        <!-- 头像和基本信息 -->
+        <div class="text-center mb-6">
+          <el-avatar :src="userProfile.avatarUrl" :size="80" class="mb-4 border-4 border-white shadow-lg">
             <el-icon size="40"><User /></el-icon>
           </el-avatar>
-          
-          <!-- 用户信息 -->
-          <div class="flex-1">
-            <div class="flex items-center space-x-4 mb-4">
-              <h1 class="text-2xl font-bold text-gray-800">{{ userProfile.nickname || userProfile.username }}</h1>
-              
-              <el-button 
-                v-if="!isOwnProfile"
-                :type="userProfile.isFollowed ? 'default' : 'primary'"
-                @click="handleFollow"
-              >
-                {{ userProfile.isFollowed ? '已关注' : '关注' }}
-              </el-button>
-            </div>
-            
-            <p class="text-gray-600 mb-4" v-if="userProfile.bio">{{ userProfile.bio }}</p>
-            
-            <!-- 统计信息 -->
-            <div class="flex space-x-8">
-              <div class="text-center">
-                <div class="text-xl font-bold text-gray-800">{{ userProfile.contentCount || 0 }}</div>
-                <div class="text-sm text-gray-500">作品</div>
-              </div>
-              <div class="text-center cursor-pointer" @click="showFollowers">
-                <div class="text-xl font-bold text-gray-800">{{ userProfile.followerCount || 0 }}</div>
-                <div class="text-sm text-gray-500">粉丝</div>
-              </div>
-              <div class="text-center cursor-pointer" @click="showFollowing">
-                <div class="text-xl font-bold text-gray-800">{{ userProfile.followingCount || 0 }}</div>
-                <div class="text-sm text-gray-500">关注</div>
-              </div>
-            </div>
+          <h1 class="text-xl font-bold text-gray-800 mb-2">{{ userProfile.nickname || userProfile.username }}</h1>
+          <p class="text-gray-600 text-sm mb-4" v-if="userProfile.bio">{{ userProfile.bio }}</p>
+        </div>
+        
+        <!-- 统计信息 -->
+        <div class="flex justify-center space-x-8 mb-6">
+          <div class="text-center">
+            <div class="text-xl font-bold text-gray-800">{{ userProfile.contentCount || 0 }}</div>
+            <div class="text-sm text-gray-500">笔记</div>
+          </div>
+          <div class="text-center cursor-pointer" @click="showFollowing">
+            <div class="text-xl font-bold text-gray-800">{{ userProfile.followingCount || 0 }}</div>
+            <div class="text-sm text-gray-500">关注</div>
+          </div>
+          <div class="text-center cursor-pointer" @click="showFollowers">
+            <div class="text-xl font-bold text-gray-800">{{ userProfile.followerCount || 0 }}</div>
+            <div class="text-sm text-gray-500">粉丝</div>
+          </div>
+        </div>
+        
+        <!-- 操作按钮 -->
+        <div class="flex justify-center space-x-3 mb-6" v-if="!isOwnProfile">
+          <el-button 
+            :type="userProfile.isFollowed ? 'default' : 'primary'"
+            class="flex-1 max-w-24"
+            @click="handleFollow"
+          >
+            {{ userProfile.isFollowed ? '已关注' : '关注' }}
+          </el-button>
+          <el-button class="flex-1 max-w-24">私信</el-button>
+        </div>
+        
+        <div class="flex justify-center space-x-3 mb-6" v-else>
+          <el-button class="flex-1 max-w-32" @click="editProfile">编辑资料</el-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 内容筛选标签 -->
+    <div class="bg-white border-t border-gray-100">
+      <div class="max-w-6xl mx-auto px-4">
+        <div class="flex justify-center space-x-8 py-3">
+          <div 
+            class="flex items-center space-x-1 py-2 px-4 cursor-pointer border-b-2"
+            :class="activeTab === 'notes' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500'"
+            @click="activeTab = 'notes'"
+          >
+            <el-icon><Document /></el-icon>
+            <span class="text-sm font-medium">笔记</span>
+          </div>
+          <div 
+            class="flex items-center space-x-1 py-2 px-4 cursor-pointer border-b-2"
+            :class="activeTab === 'likes' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500'"
+            @click="activeTab = 'likes'"
+          >
+            <el-icon><Promotion /></el-icon>
+            <span class="text-sm font-medium">点赞</span>
+          </div>
+          <div 
+            class="flex items-center space-x-1 py-2 px-4 cursor-pointer border-b-2"
+            :class="activeTab === 'collections' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500'"
+            @click="activeTab = 'collections'"
+          >
+            <el-icon><Star /></el-icon>
+            <span class="text-sm font-medium">收藏</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 内容列表 -->
-    <div class="max-w-6xl mx-auto px-4 py-6">
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <!-- 内容网格展示 -->
+    <div class="max-w-6xl mx-auto px-4 py-6 pb-20">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         <div 
           v-for="item in contentList" 
           :key="item.id"
@@ -77,14 +107,14 @@
           <img 
             :src="item.mediaUrl || '/placeholder.jpg'" 
             :alt="item.title"
-            class="w-full h-48 object-cover"
+            class="w-full h-32 object-cover"
           />
-          <div class="p-3">
-            <h3 class="font-medium text-gray-800 text-sm line-clamp-2">{{ item.title }}</h3>
-            <div class="flex items-center justify-between mt-2 text-xs text-gray-500">
+          <div class="p-2">
+            <h3 class="font-medium text-gray-800 text-xs line-clamp-2 mb-1">{{ item.title }}</h3>
+            <div class="flex items-center justify-between text-xs text-gray-500">
               <span>{{ formatDate(item.createdAt) }}</span>
-              <div class="flex items-center space-x-2">
-                <el-icon><Star /></el-icon>
+              <div class="flex items-center space-x-1">
+                <el-icon size="12"><Promotion /></el-icon>
                 <span>{{ item.likeCount || 0 }}</span>
               </div>
             </div>
@@ -109,7 +139,7 @@ import { useUserStore } from '@/stores/user'
 import { getUserProfile } from '@/api/user'
 import { getContentPage } from '@/api/content'
 import { followUser, unfollowUser } from '@/api/follow'
-import { User, Star, ArrowLeft, More, Document } from '@element-plus/icons-vue'
+import { User, Star, ArrowLeft, More, Document, Promotion } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -118,6 +148,7 @@ const userStore = useUserStore()
 const userProfile = ref(null)
 const contentList = ref([])
 const loading = ref(true)
+const activeTab = ref('notes')
 
 const isOwnProfile = computed(() => {
   return !route.params.id || route.params.id == userStore.userInfo?.id
@@ -226,6 +257,10 @@ const handleCommand = (command) => {
       ElMessage.info('设置功能开发中')
       break
   }
+}
+
+const editProfile = () => {
+  ElMessage.info('编辑资料功能开发中')
 }
 
 const viewContent = (content) => {

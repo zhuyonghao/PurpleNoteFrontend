@@ -1,8 +1,15 @@
 import request from './request'
 
-// 发布内容
-export const createContent = (data) => {
-  return request.post('/contents', data)
+/** 
+ * 发布内容接口 
+ * @param {object} params 内容发布DTO 
+ * @param {string} params.title 内容标题 
+ * @param {string} params.text 内容正文 
+ * @param {string} params.mediaUrl 媒体文件URL（图片/视频） 
+ * @returns {Promise} 返回发布结果
+ */ 
+export function createContent(params) { 
+  return request.post(`/contents`, params); 
 }
 
 // 更新内容
@@ -28,6 +35,16 @@ export const getUserContentList = (userId, params = {}) => {
 // 分页获取内容
 export const getContentPage = (params) => {
   return request.get('/contents/page', { params })
+}
+
+/** 
+ * 分页查询所有内容接口（按时间降序） 
+ * @param {string} page 
+ * @param {string} size 
+ * @returns 
+ */ 
+export const getAllContentPageOrderByTime = (page, size) => {
+  return request.get(`/contents/all/page?page=${page}&size=${size}`)
 }
 
 // 上传媒体文件
