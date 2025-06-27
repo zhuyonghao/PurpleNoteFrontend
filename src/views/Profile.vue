@@ -40,7 +40,10 @@
       :loading-more="loadingMore"
       :has-more="hasMore"
       :empty-text="isOwnProfile ? '还没有发布任何内容' : 'TA还没有发布任何内容'"
+      :show-actions="isOwnProfile"
       @content-click="viewContent"
+      @edit-content="editContent"
+      @delete-content="deleteContent"
     />
   </MainLayout>
 </template>
@@ -58,6 +61,7 @@ import { useUserStore } from '@/stores/user'
 import { getUserProfile } from '@/api/user'
 import { getContentPage } from '@/api/content'
 import { followUser, unfollowUser } from '@/api/follow'
+import { updateContent, deleteContent as deleteContentApi } from '@/api/content'
 
 const route = useRoute()
 const router = useRouter()
@@ -262,5 +266,31 @@ const handleTabChange = (tab) => {
 
 const handleMessage = () => {
   ElMessage.info('私信功能开发中')
+}
+
+// 编辑内容
+const editContent = (content) => {
+  // 跳转到编辑页面，传递内容ID
+  router.push({
+    name: 'EditContent',
+    params: { id: content.id }
+  })
+}
+
+// 删除内容
+const deleteContent = async (content) => {
+  try {
+    await deleteContentApi(content.id)
+    ElMessage.success('删除成功')
+    
+    // 从列表中移除已删除的内容
+    const index = contentList.value.findIndex(item => item.id === content.id)
+    if (index > -1) {
+      contentList.value.splice(index, 1)
+    }
+  } catch (error) {
+    console.error('删除内容失败:', error)
+    ElMessage.error('删除失败，请重试')
+  }
 }
 </script>

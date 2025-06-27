@@ -53,6 +53,15 @@ const routes = [
     }
   },
   {
+    path: '/content/:id/edit',
+    name: 'EditContent',
+    component: () => import('@/views/EditContent.vue'),
+    meta: {
+      requiresAuth: true,
+      title: '编辑内容'
+    }
+  },
+  {
     path: '/content/:id',
     name: 'ContentDetail',
     component: () => import('@/views/ContentDetail.vue'),

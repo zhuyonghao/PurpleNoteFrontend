@@ -4,9 +4,35 @@
       <div 
         v-for="item in contentList" 
         :key="item.id"
-        class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-        @click="$emit('contentClick', item)"
+        class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer relative group"
+        @click="handleContentClick(item)"
       >
+        <!-- 操作菜单 - 只在自己的内容上显示 -->
+        <div v-if="showActions && isOwnContent(item)" class="absolute top-2 right-2 z-10">
+          <el-dropdown @command="(command) => handleAction(command, item)" trigger="click">
+            <el-button 
+              size="small" 
+              circle 
+              class="opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 backdrop-blur-sm"
+              @click.stop
+            >
+              <el-icon><MoreFilled /></el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="edit">
+                  <el-icon><Edit /></el-icon>
+                  编辑
+                </el-dropdown-item>
+                <el-dropdown-item command="delete" class="text-red-500">
+                  <el-icon><Delete /></el-icon>
+                  删除
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
+
         <img 
           :src="item.mediaUrl || '/placeholder.jpg'" 
           :alt="item.title"
@@ -45,9 +71,13 @@
 </template>
 
 <script setup>
-import { Promotion, Loading, Document } from '@element-plus/icons-vue'
+import { Promotion, Loading, Document, MoreFilled, Edit, Delete } from '@element-plus/icons-vue'
+import { ElMessageBox, ElMessage } from 'element-plus'
+import { useUserStore } from '@/stores/user'
 
-defineProps({
+const userStore = useUserStore()
+
+const props = defineProps({
   contentList: {
     type: Array,
     default: () => []
@@ -67,10 +97,46 @@ defineProps({
   emptyText: {
     type: String,
     default: '暂无内容'
+  },
+  showActions: {
+    type: Boolean,
+    default: false
   }
 })
 
-defineEmits(['contentClick'])
+const emit = defineEmits(['contentClick', 'editContent', 'deleteContent'])
+
+// 判断是否是自己的内容
+const isOwnContent = (content) => {
+  return content.userId === userStore.userInfo?.id || content.authorId === userStore.userInfo?.id
+}
+
+// 处理内容点击
+const handleContentClick = (item) => {
+  emit('contentClick', item)
+}
+
+// 处理操作菜单
+const handleAction = async (command, item) => {
+  if (command === 'edit') {
+    emit('editContent', item)
+  } else if (command === 'delete') {
+    try {
+      await ElMessageBox.confirm(
+        '确定要删除这条内容吗？删除后无法恢复。',
+        '确认删除',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+      )
+      emit('deleteContent', item)
+    } catch {
+      // 用户取消删除
+    }
+  }
+}
 
 const formatDate = (dateString) => {
   if (!dateString) return ''
