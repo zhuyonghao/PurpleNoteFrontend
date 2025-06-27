@@ -26,6 +26,12 @@ const routes = [
     meta: { requiresAuth: true, layout: 'main' }
   },
   {
+    path: '/hot',
+    name: 'Hot',
+    component: () => import('@/views/Hot.vue'),
+    meta: { requiresAuth: true, layout: 'main' }
+  },
+  {
     path: '/publish',
     name: 'Publish',
     component: () => import('@/views/Publish.vue'),
