@@ -20,9 +20,16 @@ export const getUserById = (userId) => {
   return request.get(`/users/${userId}`)
 }
 
-// 更新用户资料
-export const updateUserProfile = (data) => {
-  return request.put('/users/profile', data)
+/**
+ * 修改个人主页接口
+ * @param {object} params 要修改的资料参数
+ * @param {string} params.avatarUrl 头像URL
+ * @param {string} params.bio 个人简介
+ * @param {string} params.nickname 昵称
+ * @returns 
+ */
+export const updateUserProfile = (params) => {
+  return request.put('/users/profile', params)
 }
 
 // 上传头像
