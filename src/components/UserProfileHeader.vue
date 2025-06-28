@@ -11,18 +11,21 @@
       </div>
       
       <!-- 统计信息 -->
-      <div class="flex justify-center space-x-8 mb-6">
-        <div class="text-center">
-          <div class="text-xl font-bold text-gray-800">{{ userProfile.contentCount || 0 }}</div>
-          <div class="text-sm text-gray-500">笔记</div>
-        </div>
-        <div class="text-center cursor-pointer" @click="$emit('showFollowing')">
-          <div class="text-xl font-bold text-gray-800">{{ userProfile.followingCount || 0 }}</div>
-          <div class="text-sm text-gray-500">关注</div>
-        </div>
-        <div class="text-center cursor-pointer" @click="$emit('showFollowers')">
-          <div class="text-xl font-bold text-gray-800">{{ userProfile.followerCount || 0 }}</div>
-          <div class="text-sm text-gray-500">粉丝</div>
+      <!-- 统计信息 - 极端强制水平版本 -->
+      <div class="flex justify-center mb-6">
+        <div class="flex space-x-8 min-w-max" style="display: flex !important; flex-direction: row !important;">
+          <div class="text-center" style="flex-shrink: 0 !important; min-width: 60px !important;">
+            <div class="text-xl font-bold text-gray-800" style="white-space: nowrap !important;">{{ userProfile.contentCount || 0 }}</div>
+            <div class="text-sm text-gray-500" style="white-space: nowrap !important;">笔记</div>
+          </div>
+          <div class="text-center cursor-pointer" style="flex-shrink: 0 !important; min-width: 60px !important;" @click="$emit('showFollowing')">
+            <div class="text-xl font-bold text-gray-800" style="white-space: nowrap !important;">{{ userProfile.followingCount || 0 }}</div>
+            <div class="text-sm text-gray-500" style="white-space: nowrap !important;">关注</div>
+          </div>
+          <div class="text-center cursor-pointer" style="flex-shrink: 0 !important; min-width: 60px !important;" @click="$emit('showFollowers')">
+            <div class="text-xl font-bold text-gray-800" style="white-space: nowrap !important;">{{ userProfile.followerCount || 0 }}</div>
+            <div class="text-sm text-gray-500" style="white-space: nowrap !important;">粉丝</div>
+          </div>
         </div>
       </div>
       
