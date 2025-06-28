@@ -81,7 +81,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { getContent } from '@/api/content'
-import { likeContent, cancelLike } from '@/api/like'
+import { likeContent, cancelLike, getLikeStatus } from '@/api/like'
 import { User, Star, StarFilled, ArrowLeft, Share, Loading, Warning } from '@element-plus/icons-vue'
 
 const route = useRoute()
@@ -104,7 +104,29 @@ const fetchContent = async () => {
     // 直接使用响应数据，不需要通过 .data 属性
     if (response && response.id) {
       content.value = response
-      console.log('获取内容详情成功:', response)
+      
+      // 获取点赞状态
+      if (userStore.isLoggedIn && userStore.token) {
+        try {
+          const likeStatusResponse = await getLikeStatus(response.id)
+          console.log('点赞状态响应:', likeStatusResponse)
+          
+          // 根据新的响应格式处理数据
+          content.value.isLiked = likeStatusResponse.isLiked || false
+          // 如果接口返回了likeCount，使用接口的值
+          if (likeStatusResponse.likeCount !== undefined) {
+            content.value.likeCount = likeStatusResponse.likeCount
+          }
+        } catch (error) {
+          console.warn('获取点赞状态失败:', error)
+          content.value.isLiked = false
+        }
+      } else {
+        console.log('用户未登录，设置默认点赞状态')
+        content.value.isLiked = false
+      }
+      
+      console.log('获取内容详情成功:', content.value)
     } else {
       console.error('API响应数据结构异常:', response)
       ElMessage.error('数据格式错误')
@@ -123,12 +145,15 @@ const handleLike = async () => {
       await cancelLike(content.value.id)
       content.value.isLiked = false
       content.value.likeCount = Math.max(0, (content.value.likeCount || 0) - 1)
+      console.log('取消点赞成功')
     } else {
       await likeContent(content.value.id)
       content.value.isLiked = true
       content.value.likeCount = (content.value.likeCount || 0) + 1
+      console.log('点赞成功')
     }
   } catch (error) {
+    console.error('点赞操作失败:', error)
     ElMessage.error('操作失败')
   }
 }

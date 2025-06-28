@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { getContentPage, getContent, getAllContentPageOrderByTime } from '@/api/content'
+import { getLikeStatus } from '@/api/like'
+import { useUserStore } from '@/stores/user'
 
 export const useContentStore = defineStore('content', () => {
   const contentList = ref([])
@@ -39,6 +41,52 @@ export const useContentStore = defineStore('content', () => {
     }
   }
 
+  // 为内容列表添加点赞状态
+  // 为内容列表添加点赞状态
+  const addLikeStatusToContents = async (contents) => {
+    if (!contents || contents.length === 0) return contents
+    
+    // 检查用户是否已登录
+    const userStore = useUserStore()
+    if (!userStore.isLoggedIn || !userStore.token) {
+      console.log('用户未登录，跳过点赞状态查询')
+      return contents.map(content => ({ ...content, isLiked: false }))
+    }
+    
+    try {
+      // 顺序查询每个内容的点赞状态
+      const contentsWithLikeStatus = []
+      
+      for (const content of contents) {
+        try {
+          const likeStatus = await getLikeStatus(content.id)
+          contentsWithLikeStatus.push({
+            ...content,
+            isLiked: likeStatus.isLiked || false,
+            // 如果接口返回了likeCount，使用接口的值，否则保持原有值
+            likeCount: likeStatus.likeCount !== undefined ? likeStatus.likeCount : (content.likeCount || 0)
+          })
+        } catch (error) {
+          console.warn(`获取内容${content.id}点赞状态失败:`, error)
+          // 如果是token相关错误，返回未点赞状态
+          if (error.message && error.message.includes('token')) {
+            console.warn('Token相关错误，用户可能需要重新登录')
+          }
+          contentsWithLikeStatus.push({
+            ...content,
+            isLiked: false,
+            likeCount: content.likeCount || 0
+          })
+        }
+      }
+      
+      return contentsWithLikeStatus
+    } catch (error) {
+      console.error('批量获取点赞状态失败:', error)
+      return contents.map(content => ({ ...content, isLiked: false }))
+    }
+  }
+
   // 获取所有内容列表（首页使用）
   const fetchAllContentList = async (page = 1, refresh = false) => {
     try {
@@ -48,12 +96,15 @@ export const useContentStore = defineStore('content', () => {
       const result = await getAllContentPageOrderByTime(page, pageSize.value)
       console.log('API返回结果:', result)
       
+      // 为内容添加点赞状态
+      const contentsWithLikeStatus = await addLikeStatusToContents(result.list || [])
+      
       if (refresh || page === 1) {
-        contentList.value = result.list || []
+        contentList.value = contentsWithLikeStatus
         console.log('设置内容列表:', contentList.value)
       } else {
-        contentList.value.push(...(result.list || []))
-        console.log('追加内容列表:', result.list)
+        contentList.value.push(...contentsWithLikeStatus)
+        console.log('追加内容列表:', contentsWithLikeStatus)
       }
       
       currentPage.value = page
@@ -79,6 +130,16 @@ export const useContentStore = defineStore('content', () => {
   const fetchContentDetail = async (id) => {
     try {
       const result = await getContent(id)
+      
+      // 获取点赞状态
+      try {
+        const likeStatus = await getLikeStatus(id)
+        result.isLiked = likeStatus.isLiked || false
+      } catch (error) {
+        console.warn('获取点赞状态失败:', error)
+        result.isLiked = false
+      }
+      
       currentContent.value = result
       return result
     } catch (error) {

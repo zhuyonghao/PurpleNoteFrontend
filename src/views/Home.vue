@@ -71,7 +71,7 @@ import {
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useContentStore } from '@/stores/content'
-import { likeContent, cancelLike } from '@/api/like'
+import { likeContent, cancelLike, getLikeStatus } from '@/api/like'
 import ContentCard from '@/components/ContentCard.vue'
 import LoadingState from '@/components/LoadingState.vue'
 import EmptyState from '@/components/EmptyState.vue'
@@ -138,19 +138,51 @@ const refreshContent = async () => {
 }
 
 const handleLike = async (content) => {
+  // 检查用户是否已登录
+  if (!userStore.isLoggedIn || !userStore.token) {
+    ElMessage.warning('请先登录后再进行点赞操作')
+    router.push('/login')
+    return
+  }
+  
   try {
+    console.log('点赞操作开始，当前状态:', content.isLiked)
+    
     if (content.isLiked) {
       await cancelLike(content.id)
       content.isLiked = false
-      content.likeCount--
+      content.likeCount = Math.max(0, (content.likeCount || 0) - 1)
+      console.log('取消点赞成功')
     } else {
       await likeContent(content.id)
       content.isLiked = true
-      content.likeCount++
+      content.likeCount = (content.likeCount || 0) + 1
+      console.log('点赞成功')
     }
+    
+    // 可选：重新获取点赞状态以确保数据一致性
+    try {
+      const likeStatusResponse = await getLikeStatus(content.id)
+      content.isLiked = likeStatusResponse.isLiked || false
+      if (likeStatusResponse.likeCount !== undefined) {
+        content.likeCount = likeStatusResponse.likeCount
+      }
+      console.log('同步点赞状态成功:', likeStatusResponse)
+    } catch (syncError) {
+      console.warn('同步点赞状态失败:', syncError)
+    }
+    
   } catch (error) {
     console.error('点赞操作失败:', error)
-    ElMessage.error('操作失败，请重试')
+    
+    // 如果是token相关错误，提示用户重新登录
+    if (error.message && error.message.includes('token')) {
+      ElMessage.error('登录已过期，请重新登录')
+      userStore.logout()
+      router.push('/login')
+    } else {
+      ElMessage.error('操作失败，请重试')
+    }
   }
 }
 
