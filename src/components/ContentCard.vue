@@ -1,24 +1,25 @@
 <template>
   <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden">
     <!-- 内容图片 -->
-    <div class="relative" @click="$emit('click', content)">
+    <div class="relative" @click="$emit('click', content)" style="display: flex !important; justify-content: center !important; align-items: center !important; height: 200px !important; overflow: hidden !important;">
       <img 
         :src="content.mediaUrl || '/placeholder.jpg'" 
         :alt="content.title"
-        class="w-full h-auto object-cover"
+        class="w-full h-full object-cover"
         loading="lazy"
+        style="width: 100% !important; height: 100% !important; object-fit: cover !important;"
       />
     </div>
     
     <!-- 标题和描述 -->
-    <div class="p-3">
-      <h3 class="font-medium text-gray-800 text-sm mb-2 line-clamp-2" @click="$emit('click', content)">
+    <div class="p-3" style="text-align: center !important;">
+      <h3 class="font-medium text-gray-800 text-sm mb-2 line-clamp-2" @click="$emit('click', content)" style="text-align: center !important;">
         {{ content.title }}
       </h3>
       
       <!-- 作者信息 -->
-      <div class="flex items-center justify-between mb-2">
-        <div class="flex items-center space-x-2 cursor-pointer" @click="handleAuthorClick">
+      <div class="mb-2" style="display: flex !important; justify-content: center !important; align-items: center !important;">
+        <div class="flex items-center space-x-2 cursor-pointer" @click="handleAuthorClick" style="display: flex !important; align-items: center !important; gap: 8px !important;">
           <el-avatar :src="content.userAvatarUrl" :size="20">
             <el-icon><User /></el-icon>
           </el-avatar>
@@ -27,7 +28,7 @@
       </div>
       
       <!-- 标签 -->
-      <div class="flex flex-wrap gap-1 mb-2" v-if="content.tags && content.tags.length > 0">
+      <div class="mb-2" v-if="content.tags && content.tags.length > 0" style="display: flex !important; justify-content: center !important; flex-wrap: wrap !important; gap: 4px !important;">
         <span 
           v-for="tag in content.tags.slice(0, 2)" 
           :key="tag"
@@ -38,36 +39,35 @@
       </div>
       
       <!-- 互动按钮 -->
-      <div class="flex items-center justify-between text-gray-500">
-        <div class="flex items-center space-x-4">
+      <div class="text-gray-500 text-xs" style="display: flex !important; justify-content: center !important; align-items: center !important;">
+        <div style="display: flex !important; align-items: center !important; gap: 16px !important;">
           <!-- 点赞 -->
-          <div class="flex items-center space-x-1">
-            <el-button
-              :type="content.isLiked ? 'warning' : 'default'"
-              size="small"
-              circle
-              @click.stop="$emit('like', content)"
-              class="w-6 h-6"
+          <div style="display: flex !important; align-items: center !important; gap: 4px !important; cursor: pointer;" @click.stop="$emit('like', content)">
+            <el-icon 
+              :class="content.isLiked ? 'text-yellow-500' : 'text-gray-400'"
+              size="14"
             >
-              <el-icon>
-                <StarFilled v-if="content.isLiked" class="text-yellow-500" />
-                <Star v-else />
-              </el-icon>
-            </el-button>
-            <span class="text-xs">{{ content.likeCount || 0 }}</span>
+              <StarFilled v-if="content.isLiked" />
+              <Star v-else />
+            </el-icon>
+            <span>{{ content.likeCount || 0 }}</span>
           </div>
           
           <!-- 评论 -->
-          <div class="flex items-center space-x-1">
-            <el-icon size="14"><ChatDotRound /></el-icon>
-            <span class="text-xs">{{ content.commentCount || 0 }}</span>
+          <div style="display: flex !important; align-items: center !important; gap: 4px !important;">
+            <el-icon size="14" class="text-gray-400"><ChatDotRound /></el-icon>
+            <span>{{ content.commentCount || 0 }}</span>
           </div>
-        </div>
-        
-        <!-- 分享和收藏 -->
-        <div class="flex items-center space-x-2">
-          <el-icon size="14" class="cursor-pointer hover:text-primary-600"><Share /></el-icon>
-          <el-icon size="14" class="cursor-pointer hover:text-primary-600"><Collection /></el-icon>
+          
+          <!-- 分享 -->
+          <div style="display: flex !important; align-items: center !important; cursor: pointer;">
+            <el-icon size="14" class="hover:text-primary-600 text-gray-400"><Share /></el-icon>
+          </div>
+          
+          <!-- 收藏 -->
+          <div style="display: flex !important; align-items: center !important; cursor: pointer;">
+            <el-icon size="14" class="hover:text-primary-600 text-gray-400"><Collection /></el-icon>
+          </div>
         </div>
       </div>
     </div>
@@ -140,5 +140,6 @@ const handleAuthorClick = () => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  text-align: center !important;
 }
 </style>
