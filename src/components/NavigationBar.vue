@@ -51,19 +51,38 @@
       
       <!-- 用户信息 -->
       <div class="p-6 border-t border-gray-100" v-if="userStore.userInfo">
-        <div class="flex items-center">
-          <el-avatar :src="userStore.userInfo.avatarUrl" :size="40" class="mr-3">
-            <el-icon><User /></el-icon>
-          </el-avatar>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-900 truncate">
-              {{ userStore.userInfo.nickname || userStore.userInfo.username }}
-            </p>
-            <p class="text-xs text-gray-500 truncate">
-              @{{ userStore.userInfo.username }}
-            </p>
+        <el-dropdown @command="handleUserCommand" trigger="click">
+          <div class="flex items-center cursor-pointer hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors">
+            <el-avatar :src="userStore.userInfo.avatarUrl" :size="40" class="mr-3">
+              <el-icon><User /></el-icon>
+            </el-avatar>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-900 truncate">
+                {{ userStore.userInfo.nickname || userStore.userInfo.username }}
+              </p>
+              <p class="text-xs text-gray-500 truncate">
+                @{{ userStore.userInfo.username }}
+              </p>
+            </div>
+            <el-icon class="text-gray-400 ml-2"><ArrowDown /></el-icon>
           </div>
-        </div>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="profile">
+                <el-icon class="mr-2"><User /></el-icon>
+                个人主页
+              </el-dropdown-item>
+              <el-dropdown-item command="settings">
+                <el-icon class="mr-2"><Setting /></el-icon>
+                设置
+              </el-dropdown-item>
+              <el-dropdown-item command="logout" divided>
+                <el-icon class="mr-2" style="color: #f56565;"><SwitchButton /></el-icon>
+                <span style="color: #f56565;">退出登录</span>
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
     </div>
   </el-aside>
@@ -95,11 +114,17 @@ import {
   TrendCharts, 
   Plus, 
   ChatDotRound,
-  User 
+  User,
+  ArrowDown,
+  Setting,
+  SwitchButton
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
+import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const userStore = useUserStore()
+const router = useRouter()
 
 // 定义导航项
 const navItems = [
@@ -109,6 +134,47 @@ const navItems = [
   { path: '/messages', icon: ChatDotRound, label: '消息' },
   { path: '/profile', icon: User, label: '我' }
 ]
+
+// 处理用户下拉菜单命令
+const handleUserCommand = async (command) => {
+  switch (command) {
+    case 'profile':
+      router.push('/profile')
+      break
+    case 'settings':
+      ElMessage.info('设置功能开发中')
+      break
+    case 'logout':
+      await handleLogout()
+      break
+  }
+}
+
+// 处理退出登录
+const handleLogout = async () => {
+  try {
+    // 显示确认对话框
+    await ElMessageBox.confirm(
+      '确定要退出登录吗？',
+      '退出确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    
+    // 执行退出登录
+    userStore.logout()
+    ElMessage.success('已退出登录')
+    
+    // 跳转到登录页
+    router.push('/login')
+  } catch (error) {
+    // 用户取消退出
+    console.log('用户取消退出登录')
+  }
+}
 </script>
 
 <style scoped>

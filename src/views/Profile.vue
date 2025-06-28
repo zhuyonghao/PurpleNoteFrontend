@@ -9,6 +9,9 @@
             <el-dropdown-menu>
               <el-dropdown-item command="edit">编辑资料</el-dropdown-item>
               <el-dropdown-item command="settings">设置</el-dropdown-item>
+              <el-dropdown-item command="logout" divided>
+                <span style="color: #f56565;">退出登录</span>
+              </el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -56,7 +59,7 @@ import TabNavigation from '@/components/TabNavigation.vue'
 import ContentGrid from '@/components/ContentGrid.vue'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { getUserProfile } from '@/api/user'
 import { getContentPage } from '@/api/content'
@@ -337,6 +340,35 @@ const handleCommand = (command) => {
     case 'settings':
       ElMessage.info('设置功能开发中')
       break
+    case 'logout':
+      handleLogout()
+      break
+  }
+}
+
+// 处理退出登录
+const handleLogout = async () => {
+  try {
+    // 显示确认对话框
+    await ElMessageBox.confirm(
+      '确定要退出登录吗？',
+      '退出确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    
+    // 执行退出登录
+    userStore.logout()
+    ElMessage.success('已退出登录')
+    
+    // 跳转到登录页
+    router.push('/login')
+  } catch (error) {
+    // 用户取消退出
+    console.log('用户取消退出登录')
   }
 }
 
