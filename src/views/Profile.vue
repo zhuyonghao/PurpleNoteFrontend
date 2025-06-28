@@ -385,11 +385,13 @@ const viewContent = (content) => {
 }
 
 const showFollowers = () => {
-  ElMessage.info('粉丝列表功能开发中')
+  const targetUserId = isOwnProfile.value ? userStore.userInfo?.id : route.params.id
+  router.push(`/profile/${targetUserId}/followers`)
 }
 
 const showFollowing = () => {
-  ElMessage.info('关注列表功能开发中')
+  const targetUserId = isOwnProfile.value ? userStore.userInfo?.id : route.params.id
+  router.push(`/profile/${targetUserId}/following`)
 }
 
 const formatDate = (dateString) => {

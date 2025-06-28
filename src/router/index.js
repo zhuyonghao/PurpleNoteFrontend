@@ -44,6 +44,18 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/profile/:id/following',
+    name: 'FollowingList',
+    component: () => import('@/views/FollowingList.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/profile/:id/followers',
+    name: 'FollowersList',
+    component: () => import('@/views/FollowersList.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/profile/edit',
     name: 'EditProfile',
     component: () => import('@/views/EditProfile.vue'),

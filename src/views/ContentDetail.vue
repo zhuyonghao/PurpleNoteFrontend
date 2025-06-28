@@ -33,12 +33,28 @@
               </el-avatar>
               <div>
                 <p class="font-medium text-gray-800">{{ content.userName }}</p>
-                <p class="text-sm text-gray-500">{{ formatDate(content.createdAt) }}</p>
+                <div class="flex items-center space-x-2 text-sm text-gray-500">
+                  <span>{{ formatDate(content.createdAt) }}</span>
+                  <span v-if="followerCount !== null" class="text-xs bg-gray-100 px-2 py-1 rounded">
+                    {{ followerCount }} 粉丝
+                  </span>
+                </div>
               </div>
             </div>
             
             <!-- 操作按钮 -->
             <div class="flex items-center space-x-4">
+              <!-- 关注按钮 -->
+              <el-button 
+                v-if="content.userId !== userStore.userInfo?.id && userStore.isLoggedIn"
+                :type="isFollowed ? 'default' : 'primary'"
+                size="small"
+                @click="toggleFollow"
+                :loading="followLoading"
+              >
+                {{ isFollowed ? '已关注' : '关注' }}
+              </el-button>
+              
               <el-button 
                 :type="content.isLiked ? 'danger' : 'default'"
                 :icon="content.isLiked ? 'HeartFilled' : 'Heart'"
@@ -82,6 +98,7 @@ import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { getContent } from '@/api/content'
 import { likeContent, cancelLike, getLikeStatus } from '@/api/like'
+import { followUser, unfollowUser, getFollowStatus, getFollowerCount } from '@/api/follow'
 import { User, Star, StarFilled, ArrowLeft, Share, Loading, Warning } from '@element-plus/icons-vue'
 
 const route = useRoute()
@@ -89,6 +106,9 @@ const router = useRouter()
 const userStore = useUserStore()
 const content = ref(null)
 const loading = ref(true)
+const isFollowed = ref(false)
+const followLoading = ref(false)
+const followerCount = ref(null)
 
 onMounted(async () => {
   await fetchContent()
@@ -121,12 +141,84 @@ const fetchContent = async () => {
           console.warn('获取点赞状态失败:', error)
           content.value.isLiked = false
         }
+        
+        // 获取关注状态（修复：只要用户登录且不是自己的内容就查询关注状态）
+        if (response.userId && response.userId !== userStore.userInfo?.id) {
+          try {
+            const followStatusResponse = await getFollowStatus(response.userId)
+            console.log('关注状态响应:', followStatusResponse)
+            
+            // 处理不同的响应格式
+            if (followStatusResponse && typeof followStatusResponse === 'object') {
+              // 如果是 {code: 200, data: boolean} 格式
+              if (followStatusResponse.code === 200 && followStatusResponse.data !== undefined) {
+                isFollowed.value = followStatusResponse.data === true
+              }
+              // 如果是 {isFollowed: boolean} 格式
+              else if (followStatusResponse.isFollowed !== undefined) {
+                isFollowed.value = followStatusResponse.isFollowed === true
+              }
+              else {
+                isFollowed.value = false
+              }
+            } else if (typeof followStatusResponse === 'boolean') {
+              // 直接返回布尔值
+              isFollowed.value = followStatusResponse
+            } else {
+              isFollowed.value = false
+            }
+            
+            console.log('解析后的关注状态:', isFollowed.value)
+          } catch (error) {
+            console.warn('获取关注状态失败:', error)
+            isFollowed.value = false
+          }
+        } else {
+          // 如果是自己的内容或用户未登录，设置为未关注状态
+          isFollowed.value = false
+        }
       } else {
-        console.log('用户未登录，设置默认点赞状态')
+        console.log('用户未登录，设置默认状态')
         content.value.isLiked = false
+        isFollowed.value = false
+      }
+      
+      // 获取作者粉丝数
+      if (response.userId) {
+        try {
+          const followerCountResponse = await getFollowerCount(response.userId)
+          console.log('粉丝数响应:', followerCountResponse)
+          
+          // 处理不同的响应格式
+          if (followerCountResponse && typeof followerCountResponse === 'object') {
+            // 如果是 {code: 200, data: count} 格式
+            if (followerCountResponse.code === 200 && followerCountResponse.data !== undefined) {
+              followerCount.value = followerCountResponse.data
+            }
+            // 如果是 {count: number} 格式
+            else if (followerCountResponse.count !== undefined) {
+              followerCount.value = followerCountResponse.count
+            }
+            else {
+              followerCount.value = 0
+            }
+          } else if (typeof followerCountResponse === 'number') {
+            // 直接返回数字
+            followerCount.value = followerCountResponse
+          } else {
+            followerCount.value = 0
+          }
+          
+          console.log('解析后的粉丝数:', followerCount.value)
+        } catch (error) {
+          console.warn('获取粉丝数失败:', error)
+          followerCount.value = null
+        }
       }
       
       console.log('获取内容详情成功:', content.value)
+      console.log('当前关注状态:', isFollowed.value)
+      console.log('当前粉丝数:', followerCount.value)
     } else {
       console.error('API响应数据结构异常:', response)
       ElMessage.error('数据格式错误')
@@ -136,6 +228,74 @@ const fetchContent = async () => {
     console.error('获取内容详情失败:', error)
   } finally {
     loading.value = false
+  }
+}
+
+// 切换关注状态（修复版本）
+const toggleFollow = async () => {
+  if (!userStore.isLoggedIn) {
+    ElMessage.warning('请先登录')
+    return
+  }
+  
+  if (!content.value?.userId) {
+    ElMessage.error('用户信息不完整')
+    return
+  }
+  
+  // 防止重复点击
+  if (followLoading.value) {
+    return
+  }
+  
+  followLoading.value = true
+  const originalFollowState = isFollowed.value
+  const originalFollowerCount = followerCount.value
+  
+  try {
+    let response
+    
+    if (isFollowed.value) {
+      // 当前是已关注状态，执行取消关注
+      console.log('执行取消关注操作，用户ID:', content.value.userId)
+      response = await unfollowUser(content.value.userId)
+      console.log('取消关注响应:', response)
+      
+      // 修复：检查响应是否成功（无论data是什么值）
+      // 由于响应拦截器已经处理了成功的情况，如果能执行到这里说明操作成功
+      isFollowed.value = false
+      // 更新粉丝数
+      if (followerCount.value !== null && followerCount.value > 0) {
+        followerCount.value = followerCount.value - 1
+      }
+      ElMessage.success('已取消关注')
+      console.log('取消关注成功，新状态:', isFollowed.value)
+    } else {
+      // 当前是未关注状态，执行关注
+      console.log('执行关注操作，用户ID:', content.value.userId)
+      response = await followUser(content.value.userId)
+      console.log('关注响应:', response)
+      
+      // 修复：检查响应是否成功（无论data是什么值）
+      // 由于响应拦截器已经处理了成功的情况，如果能执行到这里说明操作成功
+      isFollowed.value = true
+      // 更新粉丝数
+      if (followerCount.value !== null) {
+        followerCount.value = followerCount.value + 1
+      }
+      ElMessage.success('关注成功')
+      console.log('关注成功，新状态:', isFollowed.value)
+    }
+  } catch (error) {
+    // 恢复原始状态
+    isFollowed.value = originalFollowState
+    followerCount.value = originalFollowerCount
+    
+    const errorMsg = originalFollowState ? '取消关注失败' : '关注失败'
+    ElMessage.error(errorMsg)
+    console.error('关注操作失败:', error)
+  } finally {
+    followLoading.value = false
   }
 }
 
