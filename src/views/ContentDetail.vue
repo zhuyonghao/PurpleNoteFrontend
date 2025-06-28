@@ -3,86 +3,92 @@
     <div class="min-h-screen bg-gray-50">
       <!-- 返回按钮 -->
       <header class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center" style="margin-left: auto !important; margin-right: auto !important;">
           <el-button @click="$router.back()" icon="ArrowLeft" circle />
           <h1 class="ml-4 text-lg font-medium">内容详情</h1>
         </div>
       </header>
 
       <!-- 内容详情居中容器 -->
-      <div class="flex justify-center">
-        <div class="w-full max-w-4xl p-4" v-if="content && !loading">
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div class="flex justify-center" style="display: flex !important; justify-content: center !important; align-items: flex-start !important;">
+        <div class="w-full max-w-4xl p-4" v-if="content && !loading" style="width: 100% !important; max-width: 64rem !important; margin: 0 auto !important; padding: 1rem !important;">
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden" style="margin-left: auto !important; margin-right: auto !important;">
             <!-- 内容图片 -->
             <div class="relative">
               <img 
                 :src="content.mediaUrl || '/placeholder.jpg'" 
                 :alt="content.title"
-                class="w-full h-auto object-cover max-h-96"
+                class="content-image w-full h-auto object-cover"
+                style="width: 100% !important; height: auto !important; display: block !important; margin: 0 auto !important;"
               />
             </div>
             
             <!-- 内容信息 -->
-            <div class="p-6">
-              <h1 class="text-2xl font-bold text-gray-800 mb-4">{{ content.title }}</h1>
-              <p class="text-gray-600 leading-relaxed mb-6">{{ content.text }}</p>
+            <div class="p-6" style="text-align: center !important; margin: 0 auto !important;">
+              <h1 class="text-2xl font-bold text-gray-800 mb-4" style="text-align: center !important;">{{ content.title }}</h1>
+              <p class="text-gray-600 leading-relaxed mb-6" style="text-align: center !important; max-width: 600px !important; margin: 0 auto 1.5rem auto !important;">{{ content.text }}</p>
               
-              <!-- 作者信息 -->
-              <div class="flex items-center justify-between border-t pt-4">
-                <div class="flex items-center space-x-3 cursor-pointer" @click="handleAuthorClick">
+              <!-- 作者信息区域 -->
+              <div class="border-t pt-6 mb-8" style="display: flex !important; justify-content: center !important; align-items: center !important; gap: 1rem !important; padding-top: 1.5rem !important; margin-bottom: 2rem !important;">
+                <!-- 头像 -->
+                <div class="cursor-pointer avatar-hover" @click="handleAuthorClick">
                   <el-avatar :src="content.userAvatarUrl" :size="40">
                     <el-icon><User /></el-icon>
                   </el-avatar>
-                  <div>
-                    <p class="font-medium text-gray-800">{{ content.userName }}</p>
-                    <div class="flex items-center space-x-2 text-sm text-gray-500">
-                      <span>{{ formatDate(content.createdAt) }}</span>
-                      <span v-if="followerCount !== null" class="text-xs bg-gray-100 px-2 py-1 rounded">
-                        {{ followerCount }} 粉丝
-                      </span>
-                    </div>
-                  </div>
                 </div>
                 
-                <!-- 操作按钮 -->
-                <div class="flex items-center space-x-4">
-                  <!-- 关注按钮 -->
-                  <el-button 
-                    v-if="content.userId !== userStore.userInfo?.id && userStore.isLoggedIn"
-                    :type="isFollowed ? 'default' : 'primary'"
-                    size="small"
-                    @click="toggleFollow"
-                    :loading="followLoading"
-                  >
-                    {{ isFollowed ? '已关注' : '关注' }}
-                  </el-button>
-                  
-                  <el-button 
-                    :type="content.isLiked ? 'danger' : 'default'"
-                    :icon="content.isLiked ? 'HeartFilled' : 'Heart'"
-                    @click="handleLike"
-                  >
-                    {{ content.likeCount || 0 }}
-                  </el-button>
-                  
-                  <el-button icon="Share" @click="handleShare">分享</el-button>
+                <!-- 用户名和粉丝数 -->
+                <div class="cursor-pointer user-info-hover" @click="handleAuthorClick" style="text-align: left !important;">
+                  <p class="font-medium text-gray-800">{{ content.userName }}</p>
+                  <span v-if="followerCount !== null" class="text-xs text-gray-500">
+                    {{ followerCount }} 粉丝
+                  </span>
                 </div>
+                
+                <!-- 关注按钮 -->
+                <el-button 
+                  v-if="content.userId !== userStore.userInfo?.id && userStore.isLoggedIn"
+                  :type="isFollowed ? 'default' : 'primary'"
+                  size="small"
+                  @click="toggleFollow"
+                  :loading="followLoading"
+                >
+                  {{ isFollowed ? '已关注' : '关注' }}
+                </el-button>
+              </div>
+              
+              <!-- 时间和点赞操作区域 -->
+              <div class="flex items-center justify-center time-like-container" style="justify-content: center !important; align-items: center !important; gap: 4rem !important; padding-top: 1rem !important;">
+                <!-- 发布时间 -->
+                <span class="text-sm text-gray-500">{{ formatDate(content.createdAt) }}</span>
+                
+                <!-- 点赞按钮 -->
+                <el-button 
+                  :type="content.isLiked ? 'danger' : 'default'"
+                  :icon="content.isLiked ? 'HeartFilled' : 'Heart'"
+                  @click="handleLike"
+                  size="small"
+                >
+                  {{ content.likeCount || 0 }}
+                </el-button>
               </div>
             </div>
           </div>
         </div>
         
         <!-- 加载状态 -->
-        <div v-else-if="loading" class="flex justify-center items-center h-64">
-          <el-icon class="is-loading" size="32">
-            <Loading />
-          </el-icon>
-          <span class="ml-2 text-gray-500">加载中...</span>
+        <div v-else-if="loading" class="flex justify-center items-center h-64" style="display: flex !important; justify-content: center !important; align-items: center !important; width: 100% !important;">
+          <div style="text-align: center !important;">
+            <el-icon class="is-loading" size="32">
+              <Loading />
+            </el-icon>
+            <span class="ml-2 text-gray-500">加载中...</span>
+          </div>
         </div>
         
         <!-- 错误状态 -->
-        <div v-else class="flex justify-center items-center h-64">
-          <div class="text-center">
+        <div v-else class="flex justify-center items-center h-64" style="display: flex !important; justify-content: center !important; align-items: center !important; width: 100% !important;">
+          <div class="text-center" style="text-align: center !important;">
             <el-icon size="48" class="text-gray-400 mb-4">
               <Warning />
             </el-icon>
@@ -382,6 +388,104 @@ const handleAuthorClick = () => {
   }
   100% {
     transform: rotate(360deg);
+  }
+}
+
+/* 头像悬停效果 */
+.avatar-hover {
+  transition: transform 0.2s ease-in-out;
+}
+
+.avatar-hover:hover {
+  transform: scale(1.1);
+}
+
+/* 用户信息悬停效果 */
+.user-info-hover {
+  transition: color 0.2s ease-in-out;
+}
+
+.user-info-hover:hover p {
+  color: #409eff !important;
+}
+
+/* 时间和点赞区域间距 */
+.time-like-container {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 4rem !important;
+  padding-top: 1rem !important;
+}
+
+/* 强制居中样式 */
+.force-center {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: flex-start !important;
+  margin: 0 auto !important;
+}
+
+.content-container {
+  width: 100% !important;
+  max-width: 64rem !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding: 1rem !important;
+}
+
+.content-card {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  display: block !important;
+}
+
+.loading-center {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+  text-align: center !important;
+}
+
+/* 响应式图片样式 */
+.content-image {
+  /* 移动端：保持原有大小 */
+  width: 100%;
+  max-height: 24rem; /* 384px */
+  object-fit: cover;
+}
+
+/* 平板端：开始缩小宽度和高度 */
+@media (min-width: 768px) {
+  .content-image {
+    width: 85%;
+    max-width: 500px;
+    max-height: 20rem; /* 320px */
+    margin: 0 auto;
+    display: block;
+  }
+}
+
+/* 桌面端：进一步缩小 */
+@media (min-width: 1024px) {
+  .content-image {
+    width: 70%;
+    max-width: 450px;
+    max-height: 16rem; /* 256px */
+    margin: 0 auto;
+    display: block;
+  }
+}
+
+/* 大屏桌面端：最小尺寸 */
+@media (min-width: 1280px) {
+  .content-image {
+    width: 60%;
+    max-width: 400px;
+    max-height: 14rem; /* 224px */
+    margin: 0 auto;
+    display: block;
   }
 }
 </style>
