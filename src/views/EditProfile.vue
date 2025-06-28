@@ -216,33 +216,44 @@ const handleAvatarUpload = async ({ file }) => {
     const response = await uploadAvatar(file)
     console.log('头像上传响应:', response)
     
-    // 处理返回的响应格式
-    let avatarUrl = ''
-    
-    if (typeof response === 'string') {
-      // 如果直接返回字符串URL
-      avatarUrl = response.trim().replace(/`/g, '')
-    } else if (response && response.code === 200 && response.data) {
-      // 如果是标准的API响应格式
-      avatarUrl = response.data.trim().replace(/`/g, '')
-    } else if (response && response.data) {
-      // 如果只有data字段
-      avatarUrl = response.data.trim().replace(/`/g, '')
+    // 处理响应数据，清理格式
+    if (response) {
+      let avatarUrl = ''
+      
+      if (typeof response === 'string') {
+        // 如果直接返回字符串
+        avatarUrl = response.trim().replace(/`/g, '')
+      } else if (response.url) {
+        // 如果是对象且有url字段
+        avatarUrl = response.url.trim().replace(/`/g, '')
+      } else if (response.avatarUrl) {
+        // 如果是对象且有avatarUrl字段
+        avatarUrl = response.avatarUrl.trim().replace(/`/g, '')
+      } else {
+        // 其他情况，尝试直接使用response
+        avatarUrl = String(response).trim().replace(/`/g, '')
+      }
+      
+      console.log('处理后的URL:', avatarUrl)
+      
+      if (avatarUrl && (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://'))) {
+        formData.avatarUrl = avatarUrl
+        ElMessage.success('头像上传成功')
+        console.log('新头像URL:', avatarUrl)
+      } else {
+        console.error('URL格式不正确:', avatarUrl)
+        throw new Error(`获取到的URL格式不正确: ${avatarUrl}`)
+      }
     } else {
-      console.error('响应格式异常:', response)
-      throw new Error(`无法解析上传响应: ${JSON.stringify(response)}`)
-    }
-    
-    if (avatarUrl && avatarUrl.startsWith('http')) {
-      formData.avatarUrl = avatarUrl
-      ElMessage.success('头像上传成功')
-      console.log('新头像URL:', avatarUrl)
-    } else {
-      throw new Error('获取到的URL格式不正确')
+      throw new Error('上传响应数据无效')
     }
   } catch (error) {
     console.error('头像上传失败:', error)
-    ElMessage.error('头像上传失败，请重试')
+    if (error.response && error.response.data && error.response.data.message) {
+      ElMessage.error(`头像上传失败：${error.response.data.message}`)
+    } else {
+      ElMessage.error('头像上传失败，请重试')
+    }
   }
 }
 

@@ -285,9 +285,34 @@ const handleMediaUpload = async ({ file }) => {
     const response = await uploadMedia(file)
     console.log('上传响应:', response)
     
-    if (response && response.data) {
-      formData.mediaUrl = response.data
-      ElMessage.success('上传成功')
+    // 处理响应数据，清理格式
+    if (response) {
+      let mediaUrl = ''
+      
+      if (typeof response === 'string') {
+        // 如果直接返回字符串
+        mediaUrl = response.trim().replace(/`/g, '')
+      } else if (response.url) {
+        // 如果是对象且有url字段
+        mediaUrl = response.url.trim().replace(/`/g, '')
+      } else if (response.mediaUrl) {
+        // 如果是对象且有mediaUrl字段
+        mediaUrl = response.mediaUrl.trim().replace(/`/g, '')
+      } else {
+        // 其他情况，尝试直接使用response
+        mediaUrl = String(response).trim().replace(/`/g, '')
+      }
+      
+      console.log('处理后的URL:', mediaUrl)
+      
+      if (mediaUrl && (mediaUrl.startsWith('http://') || mediaUrl.startsWith('https://'))) {
+        formData.mediaUrl = mediaUrl
+        ElMessage.success('上传成功')
+        console.log('新媒体URL:', mediaUrl)
+      } else {
+        console.error('URL格式不正确:', mediaUrl)
+        throw new Error(`获取到的URL格式不正确: ${mediaUrl}`)
+      }
     } else {
       throw new Error('上传响应数据无效')
     }
