@@ -1,97 +1,102 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- 返回按钮 -->
-    <header class="bg-white shadow-sm sticky top-0 z-50">
-      <div class="max-w-4xl mx-auto px-4 py-3 flex items-center">
-        <el-button @click="$router.back()" icon="ArrowLeft" circle />
-        <h1 class="ml-4 text-lg font-medium">内容详情</h1>
-      </div>
-    </header>
-
-    <!-- 内容详情 -->
-    <div class="max-w-4xl mx-auto p-4" v-if="content && !loading">
-      <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-        <!-- 内容图片 -->
-        <div class="relative">
-          <img 
-            :src="content.mediaUrl || '/placeholder.jpg'" 
-            :alt="content.title"
-            class="w-full h-auto object-cover max-h-96"
-          />
+  <MainLayout>
+    <div class="min-h-screen bg-gray-50">
+      <!-- 返回按钮 -->
+      <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center">
+          <el-button @click="$router.back()" icon="ArrowLeft" circle />
+          <h1 class="ml-4 text-lg font-medium">内容详情</h1>
         </div>
-        
-        <!-- 内容信息 -->
-        <div class="p-6">
-          <h1 class="text-2xl font-bold text-gray-800 mb-4">{{ content.title }}</h1>
-          <p class="text-gray-600 leading-relaxed mb-6">{{ content.text }}</p>
-          
-          <!-- 作者信息 -->
-          <div class="flex items-center justify-between border-t pt-4">
-            <div class="flex items-center space-x-3 cursor-pointer" @click="handleAuthorClick">
-              <el-avatar :src="content.userAvatarUrl" :size="40">
-                <el-icon><User /></el-icon>
-              </el-avatar>
-              <div>
-                <p class="font-medium text-gray-800">{{ content.userName }}</p>
-                <div class="flex items-center space-x-2 text-sm text-gray-500">
-                  <span>{{ formatDate(content.createdAt) }}</span>
-                  <span v-if="followerCount !== null" class="text-xs bg-gray-100 px-2 py-1 rounded">
-                    {{ followerCount }} 粉丝
-                  </span>
+      </header>
+
+      <!-- 内容详情居中容器 -->
+      <div class="flex justify-center">
+        <div class="w-full max-w-4xl p-4" v-if="content && !loading">
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <!-- 内容图片 -->
+            <div class="relative">
+              <img 
+                :src="content.mediaUrl || '/placeholder.jpg'" 
+                :alt="content.title"
+                class="w-full h-auto object-cover max-h-96"
+              />
+            </div>
+            
+            <!-- 内容信息 -->
+            <div class="p-6">
+              <h1 class="text-2xl font-bold text-gray-800 mb-4">{{ content.title }}</h1>
+              <p class="text-gray-600 leading-relaxed mb-6">{{ content.text }}</p>
+              
+              <!-- 作者信息 -->
+              <div class="flex items-center justify-between border-t pt-4">
+                <div class="flex items-center space-x-3 cursor-pointer" @click="handleAuthorClick">
+                  <el-avatar :src="content.userAvatarUrl" :size="40">
+                    <el-icon><User /></el-icon>
+                  </el-avatar>
+                  <div>
+                    <p class="font-medium text-gray-800">{{ content.userName }}</p>
+                    <div class="flex items-center space-x-2 text-sm text-gray-500">
+                      <span>{{ formatDate(content.createdAt) }}</span>
+                      <span v-if="followerCount !== null" class="text-xs bg-gray-100 px-2 py-1 rounded">
+                        {{ followerCount }} 粉丝
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- 操作按钮 -->
+                <div class="flex items-center space-x-4">
+                  <!-- 关注按钮 -->
+                  <el-button 
+                    v-if="content.userId !== userStore.userInfo?.id && userStore.isLoggedIn"
+                    :type="isFollowed ? 'default' : 'primary'"
+                    size="small"
+                    @click="toggleFollow"
+                    :loading="followLoading"
+                  >
+                    {{ isFollowed ? '已关注' : '关注' }}
+                  </el-button>
+                  
+                  <el-button 
+                    :type="content.isLiked ? 'danger' : 'default'"
+                    :icon="content.isLiked ? 'HeartFilled' : 'Heart'"
+                    @click="handleLike"
+                  >
+                    {{ content.likeCount || 0 }}
+                  </el-button>
+                  
+                  <el-button icon="Share" @click="handleShare">分享</el-button>
                 </div>
               </div>
             </div>
-            
-            <!-- 操作按钮 -->
-            <div class="flex items-center space-x-4">
-              <!-- 关注按钮 -->
-              <el-button 
-                v-if="content.userId !== userStore.userInfo?.id && userStore.isLoggedIn"
-                :type="isFollowed ? 'default' : 'primary'"
-                size="small"
-                @click="toggleFollow"
-                :loading="followLoading"
-              >
-                {{ isFollowed ? '已关注' : '关注' }}
-              </el-button>
-              
-              <el-button 
-                :type="content.isLiked ? 'danger' : 'default'"
-                :icon="content.isLiked ? 'HeartFilled' : 'Heart'"
-                @click="handleLike"
-              >
-                {{ content.likeCount || 0 }}
-              </el-button>
-              
-              <el-button icon="Share" @click="handleShare">分享</el-button>
-            </div>
+          </div>
+        </div>
+        
+        <!-- 加载状态 -->
+        <div v-else-if="loading" class="flex justify-center items-center h-64">
+          <el-icon class="is-loading" size="32">
+            <Loading />
+          </el-icon>
+          <span class="ml-2 text-gray-500">加载中...</span>
+        </div>
+        
+        <!-- 错误状态 -->
+        <div v-else class="flex justify-center items-center h-64">
+          <div class="text-center">
+            <el-icon size="48" class="text-gray-400 mb-4">
+              <Warning />
+            </el-icon>
+            <p class="text-gray-500">内容加载失败</p>
+            <el-button @click="fetchContent" class="mt-4">重新加载</el-button>
           </div>
         </div>
       </div>
     </div>
-    
-    <!-- 加载状态 -->
-    <div v-else-if="loading" class="flex justify-center items-center h-64">
-      <el-icon class="is-loading" size="32">
-        <Loading />
-      </el-icon>
-      <span class="ml-2 text-gray-500">加载中...</span>
-    </div>
-    
-    <!-- 错误状态 -->
-    <div v-else class="flex justify-center items-center h-64">
-      <div class="text-center">
-        <el-icon size="48" class="text-gray-400 mb-4">
-          <Warning />
-        </el-icon>
-        <p class="text-gray-500">内容加载失败</p>
-        <el-button @click="fetchContent" class="mt-4">重新加载</el-button>
-      </div>
-    </div>
-  </div>
+  </MainLayout>
 </template>
 
 <script setup>
+import MainLayout from '@/layouts/MainLayout.vue'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
