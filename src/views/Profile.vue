@@ -64,7 +64,7 @@ import { useUserStore } from '@/stores/user'
 import { getUserProfile, getUserById } from '@/api/user'
 import { getContentPage } from '@/api/content'
 import { followUser, unfollowUser } from '@/api/follow'
-import { updateContent, deleteContent as deleteContentApi } from '@/api/content'
+import { updateContent, deleteContent as deleteContentApi, getUserContentCount } from '@/api/content'
 // 导入点赞相关API
 import { getLikeStatus, getUserLikes } from '@/api/like'
 import { getFollowingCount, getFollowerCount } from '@/api/follow'
@@ -131,7 +131,7 @@ const fetchUserProfile = async () => {
     const userId = isOwnProfile.value ? userStore.userInfo?.id : route.params.id
     
     if (userId) {
-      // 单独获取粉丝数和关注数，确保数据准确
+      // 单独获取粉丝数、关注数和内容数量，确保数据准确
       try {
         // 逐个查询，不使用并发
         console.log('开始获取关注数...')
@@ -142,11 +142,16 @@ const fetchUserProfile = async () => {
         const followerCountRes = await getFollowerCount(userId)
         console.log('获取到的粉丝数:', followerCountRes)
         
-        // 更新用户资料中的粉丝数和关注数
+        console.log('开始获取内容数量...')
+        const contentCountRes = await getUserContentCount(userId)
+        console.log('获取到的内容数量:', contentCountRes)
+        
+        // 更新用户资料中的粉丝数、关注数和内容数量
         userProfile.value = {
           ...userProfile.value,
           followingCount: followingCountRes.data || followingCountRes,
-          followerCount: followerCountRes.data || followerCountRes
+          followerCount: followerCountRes.data || followerCountRes,
+          contentCount: contentCountRes.data || contentCountRes
         }
         
         // 如果不是自己的主页，还需要查询关注状态
@@ -156,7 +161,7 @@ const fetchUserProfile = async () => {
           // userProfile.value.isFollowed = followStatus.isFollowed
         }
       } catch (countError) {
-        console.warn('获取粉丝数和关注数失败:', countError)
+        console.warn('获取用户统计数据失败:', countError)
         // 如果获取失败，保持原有数据
       }
     }

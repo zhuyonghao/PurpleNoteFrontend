@@ -57,3 +57,12 @@ export const uploadMedia = (file) => {
     }
   })
 }
+
+/** 
+ * 查询用户内容数量接口 
+ * @param {string} userId 
+ * @returns 
+ */ 
+export function getUserContentCount(userId) { 
+  return request.get(`/contents/users/${userId}/count`); 
+}
