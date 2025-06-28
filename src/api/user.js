@@ -17,7 +17,7 @@ export const getUserProfile = () => {
 
 // 获取指定用户资料
 export const getUserById = (userId) => {
-  return request.get(`/users/${userId}`)
+  return request.get(`/users/profile/${userId}`)
 }
 
 /**

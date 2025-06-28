@@ -98,15 +98,6 @@
                 <span>{{ item.commentCount || 0 }}</span>
               </div>
               
-              <!-- 分享 -->
-              <div style="display: flex !important; align-items: center !important; cursor: pointer;">
-                <el-icon size="14" class="hover:text-primary-600 text-gray-400"><Share /></el-icon>
-              </div>
-              
-              <!-- 收藏 -->
-              <div style="display: flex !important; align-items: center !important; cursor: pointer;">
-                <el-icon size="14" class="hover:text-primary-600 text-gray-400"><Collection /></el-icon>
-              </div>
             </div>
           </div>
         </div>

@@ -61,7 +61,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/stores/user'
-import { getUserProfile } from '@/api/user'
+import { getUserProfile, getUserById } from '@/api/user'
 import { getContentPage } from '@/api/content'
 import { followUser, unfollowUser } from '@/api/follow'
 import { updateContent, deleteContent as deleteContentApi } from '@/api/content'
@@ -112,8 +112,19 @@ const fetchUserProfile = async () => {
       }
     } else {
       // 如果是其他用户的主页，通过用户ID获取
-      const response = await getUserProfile(route.params.id)
-      userProfile.value = response.data
+      const response = await getUserById(route.params.id)
+      console.log('获取到的用户数据:', response)
+      
+      // 安全地处理用户数据，确保包含所有必要字段
+      const userData = response?.data || response || {}
+      userProfile.value = {
+        ...userData,
+        nickname: userData.username || '未知用户', // 安全地使用username作为nickname
+        contentCount: 0, // 默认值，后续会更新
+        followingCount: 0, // 默认值，后续会更新
+        followerCount: 0, // 默认值，后续会更新
+        isFollowed: false // 默认值，需要单独查询关注状态
+      }
     }
     
     // 获取用户ID
@@ -136,6 +147,13 @@ const fetchUserProfile = async () => {
           ...userProfile.value,
           followingCount: followingCountRes.data || followingCountRes,
           followerCount: followerCountRes.data || followerCountRes
+        }
+        
+        // 如果不是自己的主页，还需要查询关注状态
+        if (!isOwnProfile.value) {
+          // TODO: 添加查询关注状态的API调用
+          // const followStatus = await getFollowStatus(userId)
+          // userProfile.value.isFollowed = followStatus.isFollowed
         }
       } catch (countError) {
         console.warn('获取粉丝数和关注数失败:', countError)
