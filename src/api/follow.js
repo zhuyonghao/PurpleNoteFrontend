@@ -35,7 +35,11 @@ export const getFollowerCount = (userId) => {
   return request.get(`/follows/${userId}/followers/count`)
 }
 
-// 获取共同关注
-export const getMutualFollows = (targetUserId, params) => {
-  return request.get(`/follows/mutual/${targetUserId}`, { params })
+/** 
+ * 获取共同关注人数 
+ * @param {string} targetUserId 
+ * @returns 
+ */ 
+export const getMutualFollowsCount = (targetUserId) => {
+  return request.get(`/follows/mutual/${targetUserId}/count`)
 }
