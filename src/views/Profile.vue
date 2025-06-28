@@ -39,8 +39,8 @@
       :loading="loading"
       :loading-more="loadingMore"
       :has-more="hasMore"
-      :empty-text="isOwnProfile ? '还没有发布任何内容' : 'TA还没有发布任何内容'"
-      :show-actions="isOwnProfile"
+      :empty-text="getEmptyText()"
+      :show-actions="isOwnProfile && activeTab === 'notes'"
       @content-click="viewContent"
       @edit-content="editContent"
       @delete-content="deleteContent"
@@ -62,6 +62,8 @@ import { getUserProfile } from '@/api/user'
 import { getContentPage } from '@/api/content'
 import { followUser, unfollowUser } from '@/api/follow'
 import { updateContent, deleteContent as deleteContentApi } from '@/api/content'
+// 导入点赞相关API
+import { getLikeStatus, getUserLikes } from '@/api/like'
 
 const route = useRoute()
 const router = useRouter()
@@ -79,6 +81,20 @@ const pageSize = 10
 const isOwnProfile = computed(() => {
   return !route.params.id || route.params.id == userStore.userInfo?.id
 })
+
+// 获取空状态文本
+const getEmptyText = () => {
+  switch (activeTab.value) {
+    case 'notes':
+      return isOwnProfile.value ? '还没有发布任何内容' : 'TA还没有发布任何内容'
+    case 'likes':
+      return isOwnProfile.value ? '还没有点赞任何内容' : 'TA还没有点赞任何内容'
+    case 'collections':
+      return isOwnProfile.value ? '还没有收藏任何内容' : 'TA还没有收藏任何内容'
+    default:
+      return '暂无内容'
+  }
+}
 
 const fetchUserProfile = async () => {
   try {
@@ -101,6 +117,7 @@ const fetchUserProfile = async () => {
   }
 }
 
+// 获取用户发布的内容
 const fetchUserContent = async (page = 1, append = false) => {
   try {
     if (page === 1) {
@@ -139,10 +156,13 @@ const fetchUserContent = async (page = 1, append = false) => {
     console.log('获取到的内容数据:', response)
     
     if (response && response.list) {
+      // 为内容添加点赞状态
+      const contentsWithLikeStatus = await addLikeStatusToContents(response.list)
+      
       if (append) {
-        contentList.value = [...contentList.value, ...response.list]
+        contentList.value = [...contentList.value, ...contentsWithLikeStatus]
       } else {
-        contentList.value = response.list
+        contentList.value = contentsWithLikeStatus
       }
       
       // 检查是否还有更多数据
@@ -168,12 +188,143 @@ const fetchUserContent = async (page = 1, append = false) => {
   }
 }
 
+// 获取用户点赞的内容列表
+const fetchUserLikes = async (page = 1, append = false) => {
+  try {
+    if (page === 1) {
+      loading.value = true
+    } else {
+      loadingMore.value = true
+    }
+    
+    let userId
+    
+    if (isOwnProfile.value) {
+      if (userProfile.value && userProfile.value.id) {
+        userId = userProfile.value.id
+      } else {
+        await fetchUserProfile()
+        userId = userProfile.value?.id
+      }
+    } else {
+      userId = route.params.id
+    }
+    
+    if (!userId) {
+      console.error('无法获取用户ID')
+      return
+    }
+    
+    console.log('正在获取用户点赞内容，用户ID:', userId, '页码:', page)
+    
+    // 修改这里：将page和pageSize作为params对象传递
+    const params = {
+      page: page,
+      size: pageSize
+    }
+    const response = await getUserLikes(userId, params)
+    console.log('获取到的点赞内容数据:', response)
+    
+    if (response && response.list) {
+      // 为点赞内容添加点赞状态（默认为已点赞）
+      const likedContents = response.list.map(content => ({
+        ...content,
+        isLiked: true // 用户点赞列表中的内容默认为已点赞状态
+      }))
+      
+      if (append) {
+        contentList.value = [...contentList.value, ...likedContents]
+      } else {
+        contentList.value = likedContents
+      }
+      
+      // 检查是否还有更多数据
+      hasMore.value = response.list.length === pageSize && page < (response.totalPages || 999)
+      currentPage.value = page
+      
+      console.log('设置点赞内容列表:', contentList.value)
+      console.log('是否还有更多:', hasMore.value)
+    } else {
+      console.log('没有找到点赞内容数据')
+      if (!append) {
+        contentList.value = []
+      }
+      hasMore.value = false
+    }
+  } catch (error) {
+    ElMessage.error('获取用户点赞内容失败')
+    console.error('获取用户点赞内容失败:', error)
+    hasMore.value = false
+  } finally {
+    loading.value = false
+    loadingMore.value = false
+  }
+}
+
+// 为内容列表添加点赞状态
+const addLikeStatusToContents = async (contents) => {
+  if (!contents || contents.length === 0) return contents
+  
+  // 检查用户是否已登录
+  if (!userStore.isLoggedIn || !userStore.token) {
+    console.log('用户未登录，跳过点赞状态查询')
+    return contents.map(content => ({ ...content, isLiked: false }))
+  }
+  
+  try {
+    // 顺序查询每个内容的点赞状态
+    const contentsWithLikeStatus = []
+    
+    for (const content of contents) {
+      try {
+        const likeStatus = await getLikeStatus(content.id)
+        console.log(`内容${content.id}的点赞状态:`, likeStatus)
+        contentsWithLikeStatus.push({
+          ...content,
+          isLiked: likeStatus.isLiked || false,
+          // 如果接口返回了likeCount，使用接口的值，否则保持原有值
+          likeCount: likeStatus.likeCount !== undefined ? likeStatus.likeCount : (content.likeCount || 0)
+        })
+      } catch (error) {
+        console.warn(`获取内容${content.id}点赞状态失败:`, error)
+        // 如果是token相关错误，返回未点赞状态
+        if (error.message && error.message.includes('token')) {
+          console.warn('Token相关错误，用户可能需要重新登录')
+        }
+        contentsWithLikeStatus.push({
+          ...content,
+          isLiked: false,
+          likeCount: content.likeCount || 0
+        })
+      }
+    }
+    
+    return contentsWithLikeStatus
+  } catch (error) {
+    console.error('批量获取点赞状态失败:', error)
+    return contents.map(content => ({ ...content, isLiked: false }))
+  }
+}
+
 // 加载更多内容
 const loadMore = async () => {
   if (loadingMore.value || !hasMore.value) return
   
   const nextPage = currentPage.value + 1
-  await fetchUserContent(nextPage, true)
+  
+  // 根据当前标签加载不同类型的内容
+  switch (activeTab.value) {
+    case 'notes':
+      await fetchUserContent(nextPage, true)
+      break
+    case 'likes':
+      await fetchUserLikes(nextPage, true)
+      break
+    case 'collections':
+      // TODO: 实现收藏内容加载
+      ElMessage.info('收藏功能开发中')
+      break
+  }
 }
 
 // 滚动事件处理
@@ -258,10 +409,30 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString('zh-CN')
 }
 
+// 修改标签切换处理函数
 const handleTabChange = (tab) => {
   activeTab.value = tab
+  currentPage.value = 1
+  hasMore.value = true
+  
+  console.log('切换到标签:', tab)
+  
   // 根据不同标签加载不同内容
-  fetchUserContent(1, false)
+  switch (tab) {
+    case 'notes':
+      fetchUserContent(1, false)
+      break
+    case 'likes':
+      fetchUserLikes(1, false)
+      break
+    case 'collections':
+      // TODO: 实现收藏内容加载
+      contentList.value = []
+      ElMessage.info('收藏功能开发中')
+      break
+    default:
+      fetchUserContent(1, false)
+  }
 }
 
 const handleMessage = () => {
