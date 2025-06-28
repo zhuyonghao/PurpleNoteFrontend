@@ -67,6 +67,7 @@ import { followUser, unfollowUser } from '@/api/follow'
 import { updateContent, deleteContent as deleteContentApi } from '@/api/content'
 // 导入点赞相关API
 import { getLikeStatus, getUserLikes } from '@/api/like'
+import { getFollowingCount, getFollowerCount } from '@/api/follow'
 
 const route = useRoute()
 const router = useRouter()
@@ -113,6 +114,33 @@ const fetchUserProfile = async () => {
       // 如果是其他用户的主页，通过用户ID获取
       const response = await getUserProfile(route.params.id)
       userProfile.value = response.data
+    }
+    
+    // 获取用户ID
+    const userId = isOwnProfile.value ? userStore.userInfo?.id : route.params.id
+    
+    if (userId) {
+      // 单独获取粉丝数和关注数，确保数据准确
+      try {
+        // 逐个查询，不使用并发
+        console.log('开始获取关注数...')
+        const followingCountRes = await getFollowingCount(userId)
+        console.log('获取到的关注数:', followingCountRes)
+        
+        console.log('开始获取粉丝数...')
+        const followerCountRes = await getFollowerCount(userId)
+        console.log('获取到的粉丝数:', followerCountRes)
+        
+        // 更新用户资料中的粉丝数和关注数
+        userProfile.value = {
+          ...userProfile.value,
+          followingCount: followingCountRes.data || followingCountRes,
+          followerCount: followerCountRes.data || followerCountRes
+        }
+      } catch (countError) {
+        console.warn('获取粉丝数和关注数失败:', countError)
+        // 如果获取失败，保持原有数据
+      }
     }
   } catch (error) {
     ElMessage.error('获取用户信息失败')
