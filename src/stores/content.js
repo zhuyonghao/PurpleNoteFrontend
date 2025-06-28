@@ -41,52 +41,6 @@ export const useContentStore = defineStore('content', () => {
     }
   }
 
-  // 为内容列表添加点赞状态
-  // 为内容列表添加点赞状态
-  const addLikeStatusToContents = async (contents) => {
-    if (!contents || contents.length === 0) return contents
-    
-    // 检查用户是否已登录
-    const userStore = useUserStore()
-    if (!userStore.isLoggedIn || !userStore.token) {
-      console.log('用户未登录，跳过点赞状态查询')
-      return contents.map(content => ({ ...content, isLiked: false }))
-    }
-    
-    try {
-      // 顺序查询每个内容的点赞状态
-      const contentsWithLikeStatus = []
-      
-      for (const content of contents) {
-        try {
-          const likeStatus = await getLikeStatus(content.id)
-          contentsWithLikeStatus.push({
-            ...content,
-            isLiked: likeStatus.isLiked || false,
-            // 如果接口返回了likeCount，使用接口的值，否则保持原有值
-            likeCount: likeStatus.likeCount !== undefined ? likeStatus.likeCount : (content.likeCount || 0)
-          })
-        } catch (error) {
-          console.warn(`获取内容${content.id}点赞状态失败:`, error)
-          // 如果是token相关错误，返回未点赞状态
-          if (error.message && error.message.includes('token')) {
-            console.warn('Token相关错误，用户可能需要重新登录')
-          }
-          contentsWithLikeStatus.push({
-            ...content,
-            isLiked: false,
-            likeCount: content.likeCount || 0
-          })
-        }
-      }
-      
-      return contentsWithLikeStatus
-    } catch (error) {
-      console.error('批量获取点赞状态失败:', error)
-      return contents.map(content => ({ ...content, isLiked: false }))
-    }
-  }
-
   // 获取所有内容列表（首页使用）
   const fetchAllContentList = async (page = 1, refresh = false) => {
     try {
@@ -96,21 +50,28 @@ export const useContentStore = defineStore('content', () => {
       const result = await getAllContentPageOrderByTime(page, pageSize.value)
       console.log('API返回结果:', result)
       
-      // 为内容添加点赞状态
-      const contentsWithLikeStatus = await addLikeStatusToContents(result.list || [])
+      // 先设置默认点赞状态，让内容立即显示
+      const contentsWithDefaultStatus = (result.list || []).map(content => ({
+        ...content,
+        isLiked: false,
+        likeCount: content.likeCount || 0
+      }))
       
       if (refresh || page === 1) {
-        contentList.value = contentsWithLikeStatus
+        contentList.value = contentsWithDefaultStatus
         console.log('设置内容列表:', contentList.value)
       } else {
-        contentList.value.push(...contentsWithLikeStatus)
-        console.log('追加内容列表:', contentsWithLikeStatus)
+        contentList.value.push(...contentsWithDefaultStatus)
+        console.log('追加内容列表:', contentsWithDefaultStatus)
       }
       
       currentPage.value = page
       hasMore.value = page < result.totalPages
       
       console.log('当前页:', currentPage.value, '是否有更多:', hasMore.value, '总页数:', result.totalPages)
+      
+      // 异步加载点赞状态
+      loadLikeStatusAsync(result.list || [], refresh || page === 1 ? 0 : contentList.value.length - (result.list || []).length)
       
       return result
     } catch (error) {
@@ -123,6 +84,43 @@ export const useContentStore = defineStore('content', () => {
     } finally {
       loading.value = false
       console.log('加载状态结束')
+    }
+  }
+
+  // 异步加载点赞状态
+  const loadLikeStatusAsync = async (contents, startIndex = 0) => {
+    // 检查用户是否已登录
+    const userStore = useUserStore()
+    if (!userStore.isLoggedIn || !userStore.token) {
+      console.log('用户未登录，跳过点赞状态查询')
+      return
+    }
+    
+    // 逐个加载点赞状态
+    for (let i = 0; i < contents.length; i++) {
+      const content = contents[i]
+      const contentIndex = startIndex + i
+      
+      try {
+        const likeStatus = await getLikeStatus(content.id)
+        console.log(`内容${content.id}的点赞状态:`, likeStatus)
+        
+        // 立即更新对应位置的内容
+        if (contentList.value[contentIndex]) {
+          contentList.value[contentIndex] = {
+            ...contentList.value[contentIndex],
+            isLiked: likeStatus.isLiked || false,
+            likeCount: likeStatus.likeCount !== undefined ? likeStatus.likeCount : (content.likeCount || 0)
+          }
+        }
+      } catch (error) {
+        console.warn(`获取内容${content.id}点赞状态失败:`, error)
+        // 如果是token相关错误，记录警告
+        if (error.message && error.message.includes('token')) {
+          console.warn('Token相关错误，用户可能需要重新登录')
+        }
+        // 保持默认状态，不做额外处理
+      }
     }
   }
 
