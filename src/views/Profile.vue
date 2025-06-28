@@ -235,10 +235,11 @@ const fetchUserLikes = async (page = 1, append = false) => {
     console.log('获取到的点赞内容数据:', response)
     
     if (response && response.list) {
-      // 点赞列表中的内容默认为已点赞状态，可以直接显示
+      // 先显示内容，设置默认点赞状态
       const likedContents = response.list.map(content => ({
         ...content,
-        isLiked: true // 用户点赞列表中的内容默认为已点赞状态
+        isLiked: true, // 用户点赞列表中的内容默认为已点赞状态
+        likeCount: content.likeCount || 0
       }))
       
       if (append) {
@@ -253,6 +254,9 @@ const fetchUserLikes = async (page = 1, append = false) => {
       
       console.log('设置点赞内容列表:', contentList.value)
       console.log('是否还有更多:', hasMore.value)
+      
+      // 异步加载点赞状态，逐个更新
+      loadLikeStatusAsync(response.list, append ? contentList.value.length - response.list.length : 0)
     } else {
       console.log('没有找到点赞内容数据')
       if (!append) {
