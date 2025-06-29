@@ -8,6 +8,7 @@
           :loading="saving"
           :disabled="loading"
           @click="handleSave"
+          :size="isMobile ? 'small' : 'default'"
         >
           保存
         </el-button>
@@ -21,13 +22,13 @@
     </div>
 
     <!-- 编辑表单 -->
-    <div v-else class="max-w-2xl mx-auto px-4 py-6">
+    <div v-else class="edit-container">
       <el-form 
         ref="formRef"
         :model="formData"
         :rules="rules"
-        label-width="80px"
-        class="bg-white rounded-lg p-6 shadow-sm"
+        :label-width="labelWidth"
+        class="edit-form"
       >
         <!-- 媒体预览 -->
         <el-form-item label="媒体文件">
@@ -35,16 +36,16 @@
             <img 
               :src="formData.mediaUrl" 
               alt="预览图"
-              class="w-full max-w-md h-48 object-cover rounded-lg border"
+              class="media-preview"
             />
-            <div class="mt-2 flex space-x-2">
+            <div class="media-actions">
               <el-upload
                 :show-file-list="false"
                 :before-upload="beforeMediaUpload"
                 :http-request="handleMediaUpload"
                 accept="image/*,video/*"
               >
-                <el-button size="small" type="primary" plain>
+                <el-button :size="isMobile ? 'small' : 'default'" type="primary" plain class="action-btn">
                   <el-icon class="mr-1"><Upload /></el-icon>
                   更换文件
                 </el-button>
@@ -52,8 +53,9 @@
               <el-button 
                 type="danger" 
                 plain 
-                size="small"
+                :size="isMobile ? 'small' : 'default'"
                 @click="removeMedia"
+                class="action-btn"
               >
                 <el-icon class="mr-1"><Delete /></el-icon>
                 移除文件
@@ -69,10 +71,10 @@
             accept="image/*,video/*"
             class="w-full"
           >
-            <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-purple-400 transition-colors cursor-pointer">
-              <el-icon size="48" class="text-gray-400 mb-4"><Plus /></el-icon>
-              <p class="text-gray-500">点击上传图片或视频</p>
-              <p class="text-xs text-gray-400 mt-2">支持 JPG、PNG、MP4 格式，文件大小不超过 10MB</p>
+            <div class="upload-area">
+              <el-icon :size="isMobile ? 36 : 48" class="text-gray-400 mb-4"><Plus /></el-icon>
+              <p class="text-gray-500 upload-text">点击上传图片或视频</p>
+              <p class="text-xs text-gray-400 mt-2 upload-desc">支持 JPG、PNG、MP4 格式，文件大小不超过 10MB</p>
             </div>
           </el-upload>
         </el-form-item>
@@ -94,7 +96,7 @@
             v-model="formData.text"
             type="textarea"
             placeholder="分享你的生活..."
-            :rows="6"
+            :rows="textareaRows"
             maxlength="1000"
             show-word-limit
             resize="vertical"
@@ -102,13 +104,16 @@
         </el-form-item>
       </el-form>
     </div>
+    
+    <!-- 移动端底部安全区域 -->
+    <div class="mobile-safe-area"></div>
   </MainLayout>
 </template>
 
 <script setup>
 import MainLayout from '@/layouts/MainLayout.vue'
 import PageHeader from '@/components/PageHeader.vue'
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Upload, Delete, Loading } from '@element-plus/icons-vue'
@@ -119,6 +124,34 @@ const router = useRouter()
 const formRef = ref()
 const saving = ref(false)
 const loading = ref(true)
+const windowWidth = ref(window.innerWidth)
+
+// 响应式计算属性
+const isMobile = computed(() => windowWidth.value < 768)
+const labelWidth = computed(() => isMobile.value ? '60px' : '80px')
+const textareaRows = computed(() => isMobile.value ? 4 : 6)
+
+// 监听窗口大小变化
+const handleResize = () => {
+  windowWidth.value = window.innerWidth
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+  const contentId = route.params.id
+  if (contentId) {
+    console.log('页面加载，准备获取内容ID:', contentId)
+    fetchContent()
+  } else {
+    console.error('未找到内容ID参数')
+    ElMessage.error('缺少内容ID参数')
+    router.back()
+  }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 
 // 表单数据
 const formData = reactive({
@@ -364,5 +397,214 @@ onMounted(() => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* 基础容器样式 */
+.edit-container {
+  max-width: 672px; /* 2xl */
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+.edit-form {
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.media-preview {
+  width: 100%;
+  max-width: 28rem;
+  height: 12rem;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.media-actions {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.upload-area {
+  border: 2px dashed #d1d5db;
+  border-radius: 0.5rem;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+.upload-area:hover {
+  border-color: #a855f7;
+}
+
+.upload-text {
+  color: #6b7280;
+}
+
+.upload-desc {
+  color: #9ca3af;
+  margin-top: 0.5rem;
+}
+
+.action-btn {
+  min-height: 36px;
+}
+
+.mobile-safe-area {
+  height: 0;
+}
+
+/* 移动端适配 */
+@media (max-width: 767px) {
+  .edit-container {
+    max-width: none;
+    padding: 1rem 0.75rem;
+    margin-bottom: 80px; /* 为底部导航栏留出空间 */
+  }
+  
+  .edit-form {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin: 0;
+  }
+  
+  .media-preview {
+    max-width: none;
+    height: 10rem;
+  }
+  
+  .media-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .action-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px; /* 增加触摸目标大小 */
+  }
+  
+  .upload-area {
+    padding: 1.5rem 1rem;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .upload-text {
+    font-size: 0.875rem;
+  }
+  
+  .upload-desc {
+    font-size: 0.75rem;
+    padding: 0 0.5rem;
+    text-align: center;
+  }
+  
+  .mobile-safe-area {
+    height: env(safe-area-inset-bottom, 20px);
+  }
+  
+  /* 表单项样式调整 */
+  :deep(.el-form-item) {
+    margin-bottom: 1.5rem;
+  }
+  
+  :deep(.el-form-item__label) {
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.5;
+    padding-right: 8px;
+  }
+  
+  :deep(.el-input__wrapper) {
+    min-height: 44px;
+    font-size: 16px; /* 防止iOS缩放 */
+  }
+  
+  :deep(.el-textarea__inner) {
+    font-size: 16px; /* 防止iOS缩放 */
+    line-height: 1.5;
+    min-height: 120px;
+  }
+  
+  /* 按钮样式 */
+  :deep(.el-button) {
+    min-height: 44px;
+    font-size: 0.875rem;
+  }
+  
+  /* 字数统计样式 */
+  :deep(.el-input__count) {
+    font-size: 0.75rem;
+  }
+}
+
+/* 平板适配 */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .edit-container {
+    padding: 1.5rem;
+  }
+  
+  .edit-form {
+    padding: 1.5rem;
+  }
+}
+
+/* 桌面端保持原样 */
+@media (min-width: 1024px) {
+  .edit-container {
+    padding: 1.5rem 1rem;
+  }
+  
+  .edit-form {
+    padding: 1.5rem;
+  }
+  
+  .media-actions {
+    flex-direction: row;
+  }
+  
+  .upload-area {
+    padding: 2rem;
+  }
+}
+
+/* 确保在所有设备上都有良好的触摸体验 */
+.action-btn,
+:deep(.el-button) {
+  transition: all 0.2s ease;
+}
+
+.action-btn:active,
+:deep(.el-button:active) {
+  transform: scale(0.98);
+}
+
+/* 优化滚动体验 */
+.edit-container {
+  scroll-behavior: smooth;
+}
+
+/* 处理横屏模式 */
+@media (max-height: 500px) and (orientation: landscape) {
+  .edit-container {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  .edit-form {
+    padding: 0.75rem;
+  }
+  
+  :deep(.el-form-item) {
+    margin-bottom: 1rem;
+  }
 }
 </style>
