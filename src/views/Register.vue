@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-primary-400 to-secondary-400 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+  <div class="register-container">
+    <div class="register-card">
       <div class="text-center mb-8">
         <h1 class="text-3xl font-bold text-gray-800 mb-2">注册小紫书</h1>
         <p class="text-gray-600">加入我们，分享美好生活</p>
@@ -125,3 +125,60 @@ const handleRegister = async () => {
   })
 }
 </script>
+
+<style scoped>
+.register-container {
+  min-height: 100vh !important;
+  background: linear-gradient(135deg, var(--el-color-primary-light-4), var(--el-color-secondary-light-4)) !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  padding: 1rem !important;
+  padding-top: 15vh !important;
+}
+
+.register-card {
+  background: white !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  width: 100% !important;
+  max-width: 28rem !important;
+  padding: 2rem !important;
+  margin: 0 auto !important;
+  text-align: center !important;
+}
+
+/* 确保所有文本内容都居中 */
+.register-card .el-form {
+  text-align: left !important;
+}
+
+.register-card .text-center {
+  text-align: center !important;
+}
+
+/* 确保按钮完全居中 */
+.register-card .el-button {
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+/* 响应式设计 */
+@media (max-width: 640px) {
+  .register-container {
+    padding: 0.5rem !important;
+    padding-top: 10vh !important;
+  }
+  
+  .register-card {
+    padding: 1.5rem !important;
+    margin: 0.5rem auto !important;
+  }
+}
+
+@media (max-height: 600px) {
+  .register-container {
+    padding-top: 5vh !important;
+  }
+}
+</style>
