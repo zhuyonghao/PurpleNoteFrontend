@@ -147,13 +147,13 @@ const viewContent = (contentId) => {
 // 获取排名徽章样式
 const getRankBadgeClass = (index) => {
   if (index === 0) {
-    return 'bg-gradient-to-r from-yellow-400 to-yellow-600' // 金色
+    return 'rank-badge-gold' // 金色
   } else if (index === 1) {
-    return 'bg-gradient-to-r from-gray-400 to-gray-600' // 银色
+    return 'rank-badge-silver' // 银色
   } else if (index === 2) {
-    return 'bg-gradient-to-r from-orange-400 to-orange-600' // 铜色
+    return 'rank-badge-bronze' // 铜色
   } else {
-    return 'bg-gradient-to-r from-purple-400 to-purple-600' // 紫色
+    return 'rank-badge-purple' // 紫色
   }
 }
 
@@ -465,4 +465,23 @@ onMounted(() => {
     gap: 16px !important;
   }
 }
+
+
+/* 排名徽章颜色样式 */
+.rank-badge-gold {
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%) !important;
+}
+
+.rank-badge-silver {
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%) !important;
+}
+
+.rank-badge-bronze {
+  background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%) !important;
+}
+
+.rank-badge-purple {
+  background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%) !important;
+}
+
 </style>
