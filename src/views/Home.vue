@@ -4,12 +4,12 @@
     <el-header class="bg-white shadow-sm border-b border-gray-100 flex items-center justify-between px-6" height="64px">
       <h1 class="text-xl font-semibold text-gray-800">首页</h1>
       <div class="flex items-center space-x-3">
-        <el-button 
+        <!-- <el-button 
           icon="Bell" 
           circle 
           :badge="hasNotification ? '1' : null" 
           @click="handleNotificationClick" 
-        />
+        /> -->
         <el-button icon="Refresh" circle @click="refreshContent" />
       </div>
     </el-header>

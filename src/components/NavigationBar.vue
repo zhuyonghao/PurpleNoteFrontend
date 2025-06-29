@@ -49,12 +49,12 @@
             </div>
           </el-menu-item>
           
-          <el-menu-item index="/messages" class="nav-menu-item">
+          <!-- <el-menu-item index="/messages" class="nav-menu-item">
             <div class="nav-item-content">
               <el-icon class="nav-icon"><ChatDotRound /></el-icon>
               <span class="nav-text">消息</span>
             </div>
-          </el-menu-item>
+          </el-menu-item> -->
           
           <el-menu-item index="/profile" class="nav-menu-item">
             <div class="nav-item-content">
@@ -144,7 +144,7 @@ const navItems = [
   { path: '/', icon: House, label: '首页' },
   { path: '/hot', icon: TrendCharts, label: '热门' },
   { path: '/publish', icon: Plus, label: '发布' },
-  { path: '/messages', icon: ChatDotRound, label: '消息' },
+  // { path: '/messages', icon: ChatDotRound, label: '消息' },
   { path: '/profile', icon: User, label: '我' }
 ]
 

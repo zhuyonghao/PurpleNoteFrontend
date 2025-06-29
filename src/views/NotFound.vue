@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 text-center">
+  <div class="min-h-screen bg-gradient-to-br from-purple-400 to-pink-400 flex justify-center p-4 force-center">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 text-center content-center">
       <!-- 404图标 -->
       <div class="mb-8">
         <div class="text-8xl font-bold text-purple-500 mb-4">404</div>
@@ -47,10 +47,16 @@
             🏠 首页
           </router-link>
           <router-link 
-            to="/search" 
+            to="/hot" 
             class="text-purple-600 hover:text-purple-700 transition-colors"
           >
-            🔍 搜索
+            🔥 热门
+          </router-link>
+          <router-link 
+            to="/profile" 
+            class="text-purple-600 hover:text-purple-700 transition-colors"
+          >
+            👤 个人中心
           </router-link>
           <router-link 
             to="/publish" 
@@ -87,6 +93,20 @@ const goBack = () => {
 </script>
 
 <style scoped>
+/* 强制居中样式 - 修改为上方对齐 */
+.force-center {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  min-height: 100vh !important;
+  padding-top: 10vh !important; /* 添加上边距，使内容往上偏移 */
+}
+
+.content-center {
+  margin: 0 auto !important;
+  text-align: center !important;
+}
+
 /* 添加一些动画效果 */
 .bg-white {
   animation: fadeInUp 0.6s ease-out;
