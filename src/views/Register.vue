@@ -16,15 +16,6 @@
           />
         </el-form-item>
         
-        <el-form-item prop="email">
-          <el-input
-            v-model="registerForm.email"
-            placeholder="邮箱"
-            size="large"
-            prefix-icon="Message"
-          />
-        </el-form-item>
-        
         <el-form-item prop="password">
           <el-input
             v-model="registerForm.password"
@@ -100,10 +91,6 @@ const rules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
     { min: 3, max: 20, message: '用户名长度在3到20个字符', trigger: 'blur' }
-  ],
-  email: [
-    { required: true, message: '请输入邮箱', trigger: 'blur' },
-    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
