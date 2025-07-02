@@ -985,4 +985,27 @@ ssh user@your-server "cd /opt/purple-note && ./deploy-server.sh"
 - ✅ 可以离线部署
 
 你觉得哪种方式更适合你的需求？
-        
+
+用户遇到了413 Request Entity Too Large错误，这是nginx返回的错误，表示请求体太大。我需要检查nginx配置文件，看看是否设置了client_max_body_size限制。
+
+nginx.conf :( 2 - 50 )
+
+我看到了问题所在！你遇到的 413 Request Entity Too Large 错误是因为 nginx 配置中缺少了 client_max_body_size 设置，这导致上传文件时请求体大小超过了默认限制。
+
+根据你的项目代码，我看到 `EditContent.vue` 中设置了文件大小限制为 10MB，但 nginx 默认的 client_max_body_size 只有 1MB。
+
+## 解决方案
+需要在 `nginx.conf` 中添加 client_max_body_size 配置：
+
+## 重新部署
+修改配置后，需要重新构建和部署容器：
+docker stop purple-note-frontend
+docker rm purple-note-frontend
+docker build -t purple-note-frontend .
+docker run -d -p 3000:80 --name purple-note-frontend purple-note-frontend
+
+## 配置说明
+- client_max_body_size 20M ：设置最大请求体为 20MB，这样可以支持你前端设置的 10MB 文件上传限制
+- 在 location /api/ 块中也添加了相同配置，确保 API 代理请求也能处理大文件
+- 建议设置为 20MB 而不是 10MB，留一些缓冲空间
+这样修改后，文件上传功能就能正常工作了！        
