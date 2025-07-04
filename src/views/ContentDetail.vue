@@ -12,7 +12,8 @@
       <!-- 内容详情居中容器 -->
       <div class="flex justify-center" style="display: flex !important; justify-content: center !important; align-items: flex-start !important;">
         <div class="w-full max-w-4xl p-4" v-if="content && !loading" style="width: 100% !important; max-width: 64rem !important; margin: 0 auto !important; padding: 1rem !important;">
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden" style="margin-left: auto !important; margin-right: auto !important;">
+          <!-- 内容卡片 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6" style="margin-left: auto !important; margin-right: auto !important;">
             <!-- 内容图片 -->
             <div class="relative">
               <img 
@@ -74,6 +75,9 @@
               </div>
             </div>
           </div>
+          
+          <!-- 评论区域 -->
+          <CommentSection :content-id="content.id" />
         </div>
         
         <!-- 加载状态 -->
@@ -103,6 +107,7 @@
 
 <script setup>
 import MainLayout from '@/layouts/MainLayout.vue'
+import CommentSection from '@/components/CommentSection.vue'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'

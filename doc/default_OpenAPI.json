@@ -12,6 +12,10 @@
   ],
   "tags": [
     {
+      "name": "评论管理",
+      "description": "评论相关接口"
+    },
+    {
       "name": "关注模块",
       "description": "用户关系管理"
     },
@@ -26,6 +30,10 @@
     {
       "name": "用户模块",
       "description": "用户认证和个人主页修改"
+    },
+    {
+      "name": "AI模块",
+      "description": "AI功能"
     }
   ],
   "paths": {
@@ -403,6 +411,134 @@
         }
       }
     },
+    "/comments": {
+      "post": {
+        "tags": [
+          "评论管理"
+        ],
+        "summary": "发表评论",
+        "description": "创建新评论",
+        "operationId": "createComment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommentCreateDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultCommentVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/comments/{commentId}/like": {
+      "post": {
+        "tags": [
+          "评论管理"
+        ],
+        "summary": "点赞评论",
+        "description": "对指定评论进行点赞",
+        "operationId": "likeComment",
+        "parameters": [
+          {
+            "name": "commentId",
+            "in": "path",
+            "description": "评论ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "评论管理"
+        ],
+        "summary": "取消点赞评论",
+        "description": "取消对指定评论的点赞",
+        "operationId": "unlikeComment",
+        "parameters": [
+          {
+            "name": "commentId",
+            "in": "path",
+            "description": "评论ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/profile/{userId}": {
+      "get": {
+        "tags": [
+          "用户模块"
+        ],
+        "summary": "查询其他用户主页接口",
+        "operationId": "getOtherUserProfile",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultProfileVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/likes/users/{userId}": {
       "get": {
         "tags": [
@@ -676,13 +812,13 @@
         }
       }
     },
-    "/follows/mutual/{targetUserId}": {
+    "/follows/mutual/{targetUserId}/count": {
       "get": {
         "tags": [
           "关注模块"
         ],
-        "summary": "获取共同关注用户列表",
-        "operationId": "getMutualFollows",
+        "summary": "获取共同关注人数",
+        "operationId": "getMutualFollowsCount",
         "parameters": [
           {
             "name": "targetUserId",
@@ -692,26 +828,6 @@
               "type": "integer",
               "format": "int64"
             }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 1
-            }
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 10
-            }
           }
         ],
         "responses": {
@@ -720,7 +836,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ResultPageResultUserVO"
+                  "$ref": "#/components/schemas/ResultLong"
                 }
               }
             }
@@ -822,6 +938,38 @@
         }
       }
     },
+    "/contents/users/{userId}/count": {
+      "get": {
+        "tags": [
+          "内容模块"
+        ],
+        "summary": "查询用户内容数量接口",
+        "operationId": "getUserContentCount",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultLong"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/contents/page": {
       "get": {
         "tags": [
@@ -873,6 +1021,205 @@
           }
         }
       }
+    },
+    "/contents/all/page": {
+      "get": {
+        "tags": [
+          "内容模块"
+        ],
+        "summary": "分页查询所有内容接口（按时间降序）",
+        "operationId": "getAllContentPageOrderByTime",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPageResultContentVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/comments/{commentId}/like/status": {
+      "get": {
+        "tags": [
+          "评论管理"
+        ],
+        "summary": "查询评论点赞状态",
+        "description": "查询当前用户对指定评论的点赞状态",
+        "operationId": "getCommentLikeStatus",
+        "parameters": [
+          {
+            "name": "commentId",
+            "in": "path",
+            "description": "评论ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultBoolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/comments/content/{contentId}": {
+      "get": {
+        "tags": [
+          "评论管理"
+        ],
+        "summary": "查询评论",
+        "description": "分页查询内容的所有顶级评论及其子评论",
+        "operationId": "getContentComments",
+        "parameters": [
+          {
+            "name": "contentId",
+            "in": "path",
+            "description": "内容ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "pageNum",
+            "in": "query",
+            "description": "页码",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "每页大小",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPageResultCommentVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ai/chat": {
+      "get": {
+        "tags": [
+          "AI模块"
+        ],
+        "summary": "聊天接口",
+        "operationId": "chat",
+        "parameters": [
+          {
+            "name": "prompt",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/html;charset=utf-8": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/comments/{commentId}": {
+      "delete": {
+        "tags": [
+          "评论管理"
+        ],
+        "summary": "删除评论",
+        "description": "删除评论及其子评论",
+        "operationId": "deleteComment",
+        "parameters": [
+          {
+            "name": "commentId",
+            "in": "path",
+            "description": "评论ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -880,6 +1227,10 @@
       "ProfileDTO": {
         "type": "object",
         "properties": {
+          "username": {
+            "type": "string",
+            "description": "用户名"
+          },
           "avatarUrl": {
             "type": "string",
             "description": "头像URL"
@@ -966,18 +1317,15 @@
         "properties": {
           "title": {
             "type": "string",
-            "description": "内容标题",
-            "refType": null
+            "description": "内容标题"
           },
           "text": {
             "type": "string",
-            "description": "内容正文",
-            "refType": null
+            "description": "内容正文"
           },
           "mediaUrl": {
             "type": "string",
-            "description": "媒体文件URL（图片/视频）",
-            "refType": null
+            "description": "媒体文件URL（图片/视频）"
           }
         },
         "description": "内容发布DTO"
@@ -988,34 +1336,37 @@
           "id": {
             "type": "integer",
             "description": "内容ID",
-            "format": "int64",
-            "refType": null
+            "format": "int64"
+          },
+          "userId": {
+            "type": "integer",
+            "description": "作者ID",
+            "format": "int64"
           },
           "userName": {
             "type": "string",
-            "description": "作者用户名",
-            "refType": null
+            "description": "作者用户名"
+          },
+          "userAvatarUrl": {
+            "type": "string",
+            "description": "作者头像URL"
           },
           "title": {
             "type": "string",
-            "description": "内容标题",
-            "refType": null
+            "description": "内容标题"
           },
           "text": {
             "type": "string",
-            "description": "内容正文",
-            "refType": null
+            "description": "内容正文"
           },
           "mediaUrl": {
             "type": "string",
-            "description": "媒体文件URL（图片/视频）",
-            "refType": null
+            "description": "媒体文件URL（图片/视频）"
           },
           "createdAt": {
             "type": "string",
             "description": "创建时间",
-            "format": "date-time",
-            "refType": null
+            "format": "date-time"
           }
         },
         "description": "内容VO"
@@ -1034,6 +1385,175 @@
           },
           "data": {
             "$ref": "#/components/schemas/ContentVO"
+          }
+        },
+        "description": "统一响应体"
+      },
+      "CommentCreateDTO": {
+        "required": [
+          "content",
+          "contentId"
+        ],
+        "type": "object",
+        "properties": {
+          "contentId": {
+            "type": "integer",
+            "description": "内容ID",
+            "format": "int64",
+            "refType": null
+          },
+          "content": {
+            "type": "string",
+            "description": "评论内容",
+            "refType": null
+          },
+          "parentId": {
+            "type": "string",
+            "description": "父评论ID，顶级评论为null",
+            "refType": null
+          },
+          "replyId": {
+            "type": "string",
+            "description": "回复的评论ID，直接回复为null",
+            "refType": null
+          },
+          "replyUserId": {
+            "type": "integer",
+            "description": "回复的用户ID",
+            "format": "int64",
+            "refType": null
+          },
+          "replyUsername": {
+            "type": "string",
+            "description": "回复的用户名",
+            "refType": null
+          }
+        },
+        "description": "评论创建DTO"
+      },
+      "CommentVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "评论ID",
+            "refType": null
+          },
+          "contentId": {
+            "type": "integer",
+            "description": "内容ID",
+            "format": "int64",
+            "refType": null
+          },
+          "userId": {
+            "type": "integer",
+            "description": "评论者ID",
+            "format": "int64",
+            "refType": null
+          },
+          "username": {
+            "type": "string",
+            "description": "评论者用户名",
+            "refType": null
+          },
+          "userAvatar": {
+            "type": "string",
+            "description": "评论者头像",
+            "refType": null
+          },
+          "content": {
+            "type": "string",
+            "description": "评论内容",
+            "refType": null
+          },
+          "parentId": {
+            "type": "string",
+            "description": "父评论ID，顶级评论为null",
+            "refType": null
+          },
+          "replyId": {
+            "type": "string",
+            "description": "回复的评论ID",
+            "refType": null
+          },
+          "replyUserId": {
+            "type": "integer",
+            "description": "回复的用户ID",
+            "format": "int64",
+            "refType": null
+          },
+          "replyUsername": {
+            "type": "string",
+            "description": "回复的用户名",
+            "refType": null
+          },
+          "likeCount": {
+            "type": "integer",
+            "description": "点赞数",
+            "format": "int32",
+            "refType": null
+          },
+          "replyCount": {
+            "type": "integer",
+            "description": "回复数",
+            "format": "int32",
+            "refType": null
+          },
+          "isLiked": {
+            "type": "boolean",
+            "description": "当前用户是否已点赞",
+            "refType": null
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间",
+            "format": "date-time",
+            "refType": null
+          },
+          "children": {
+            "type": "array",
+            "description": "子评论列表",
+            "items": {
+              "$ref": "#/components/schemas/CommentVO"
+            },
+            "refType": "CommentVO"
+          }
+        },
+        "description": "评论视图对象"
+      },
+      "ResultCommentVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "状态码",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string",
+            "description": "响应消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/CommentVO"
+          }
+        },
+        "description": "统一响应体"
+      },
+      "ResultVoid": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "状态码",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string",
+            "description": "响应消息"
+          },
+          "data": {
+            "type": "object",
+            "description": "响应数据"
           }
         },
         "description": "统一响应体"
@@ -1285,6 +1805,62 @@
           "data": {
             "type": "boolean",
             "description": "响应数据"
+          }
+        },
+        "description": "统一响应体"
+      },
+      "PageResultCommentVO": {
+        "type": "object",
+        "properties": {
+          "currentPage": {
+            "type": "integer",
+            "description": "当前页码",
+            "format": "int32",
+            "refType": null
+          },
+          "pageSize": {
+            "type": "integer",
+            "description": "每页数量",
+            "format": "int32",
+            "refType": null
+          },
+          "total": {
+            "type": "integer",
+            "description": "总记录数",
+            "format": "int64",
+            "refType": null
+          },
+          "totalPages": {
+            "type": "integer",
+            "description": "总页数",
+            "format": "int32",
+            "refType": null
+          },
+          "list": {
+            "type": "array",
+            "description": "分页数据列表",
+            "items": {
+              "$ref": "#/components/schemas/CommentVO"
+            },
+            "refType": "CommentVO"
+          }
+        },
+        "description": "分页结果"
+      },
+      "ResultPageResultCommentVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "状态码",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string",
+            "description": "响应消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResultCommentVO"
           }
         },
         "description": "统一响应体"
