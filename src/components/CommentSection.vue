@@ -103,7 +103,7 @@
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
-import { createComment, getContentComments, deleteComment, likeComment, unlikeComment } from '@/api/comment'
+import { createComment, getContentComments, deleteComment, likeComment, unlikeComment, getCommentLikeStatus } from '@/api/comment'
 import CommentItem from './CommentItem.vue'
 import { User, ChatDotRound, Loading, Check } from '@element-plus/icons-vue'
 
@@ -185,44 +185,255 @@ const removeScrollListener = () => {
   }
 }
 
-// 加载评论
-// 加载评论
+// 查询单个评论点赞状态（异步，不阻塞页面显示）
+const loadSingleCommentLikeStatus = async (comment) => {
+  if (!userStore.isLoggedIn) {
+    return
+  }
+  
+  try {
+    const isLiked = await getCommentLikeStatus(comment.id)
+    console.log(`评论 ${comment.id} 点赞状态查询结果:`, isLiked)
+    
+    // 找到评论在数组中的索引
+    const commentIndex = comments.value.findIndex(c => c.id === comment.id)
+    if (commentIndex !== -1) {
+      // 使用Vue的响应式更新方式
+      comments.value[commentIndex] = {
+        ...comments.value[commentIndex],
+        isLiked: isLiked
+      }
+      console.log(`评论 ${comment.id} 点赞状态已更新:`, comments.value[commentIndex].isLiked)
+    }
+    
+  } catch (error) {
+    console.error(`查询评论 ${comment.id} 点赞状态失败:`, error)
+  }
+}
+
+// 查询子评论点赞状态（异步，不阻塞页面显示）
+const loadChildCommentLikeStatus = async (child) => {
+  if (!userStore.isLoggedIn) {
+    return
+  }
+  
+  try {
+    const isLiked = await getCommentLikeStatus(child.id)
+    console.log(`子评论 ${child.id} 点赞状态查询结果:`, isLiked)
+    
+    // 找到父评论
+    const parentComment = comments.value.find(comment => 
+      comment.children && comment.children.some(c => c.id === child.id)
+    )
+    
+    if (parentComment) {
+      const childIndex = parentComment.children.findIndex(c => c.id === child.id)
+      if (childIndex !== -1) {
+        // 使用Vue的响应式更新方式
+        parentComment.children[childIndex] = {
+          ...parentComment.children[childIndex],
+          isLiked: isLiked
+        }
+        console.log(`子评论 ${child.id} 点赞状态已更新:`, parentComment.children[childIndex].isLiked)
+      }
+    }
+    
+  } catch (error) {
+    console.error(`查询子评论 ${child.id} 点赞状态失败:`, error)
+  }
+}
+
+// 修改点赞处理函数，支持主评论和子评论
+const handleLikeComment = async (comment) => {
+  try {
+    // 首先尝试在主评论中查找
+    const commentIndex = comments.value.findIndex(c => c.id === comment.id)
+    
+    if (commentIndex !== -1) {
+      // 处理主评论点赞
+      const currentComment = comments.value[commentIndex]
+      let response
+      
+      if (currentComment.isLiked) {
+        response = await unlikeComment(comment.id)
+        // 使用响应式更新
+        comments.value[commentIndex] = {
+          ...currentComment,
+          isLiked: false,
+          likeCount: Math.max(0, currentComment.likeCount - 1)
+        }
+      } else {
+        response = await likeComment(comment.id)
+        // 使用响应式更新
+        comments.value[commentIndex] = {
+          ...currentComment,
+          isLiked: true,
+          likeCount: currentComment.likeCount + 1
+        }
+      }
+      
+      console.log('主评论点赞操作响应:', response)
+      
+      // 重新查询点赞状态以确保数据一致性
+      if (userStore.isLoggedIn) {
+        setTimeout(() => {
+          loadSingleCommentLikeStatus(comments.value[commentIndex])
+        }, 100)
+      }
+    } else {
+      // 在子评论中查找
+      let parentComment = null
+      let childIndex = -1
+      let parentIndex = -1
+      
+      for (let i = 0; i < comments.value.length; i++) {
+        if (comments.value[i].children && comments.value[i].children.length > 0) {
+          const foundChildIndex = comments.value[i].children.findIndex(child => child.id === comment.id)
+          if (foundChildIndex !== -1) {
+            parentComment = comments.value[i]
+            childIndex = foundChildIndex
+            parentIndex = i
+            break
+          }
+        }
+      }
+      
+      if (parentComment && childIndex !== -1) {
+        // 处理子评论点赞
+        const currentChild = parentComment.children[childIndex]
+        let response
+        
+        if (currentChild.isLiked) {
+          response = await unlikeComment(comment.id)
+          // 使用响应式更新子评论
+          comments.value[parentIndex].children[childIndex] = {
+            ...currentChild,
+            isLiked: false,
+            likeCount: Math.max(0, currentChild.likeCount - 1)
+          }
+        } else {
+          response = await likeComment(comment.id)
+          // 使用响应式更新子评论
+          comments.value[parentIndex].children[childIndex] = {
+            ...currentChild,
+            isLiked: true,
+            likeCount: currentChild.likeCount + 1
+          }
+        }
+        
+        console.log('子评论点赞操作响应:', response)
+        
+        // 重新查询子评论点赞状态以确保数据一致性
+        if (userStore.isLoggedIn) {
+          setTimeout(() => {
+            loadChildCommentLikeStatus(comments.value[parentIndex].children[childIndex])
+          }, 100)
+        }
+      } else {
+        console.error('未找到要点赞的评论:', comment.id)
+        return
+      }
+    }
+  } catch (error) {
+    console.error('评论点赞操作失败:', error)
+    ElMessage.error('操作失败')
+    
+    // 操作失败时恢复原状态
+    const commentIndex = comments.value.findIndex(c => c.id === comment.id)
+    if (commentIndex !== -1) {
+      // 主评论恢复
+      const currentComment = comments.value[commentIndex]
+      comments.value[commentIndex] = {
+        ...currentComment,
+        isLiked: !currentComment.isLiked,
+        likeCount: currentComment.isLiked ? 
+          currentComment.likeCount + 1 : 
+          Math.max(0, currentComment.likeCount - 1)
+      }
+    } else {
+      // 子评论恢复
+      for (let i = 0; i < comments.value.length; i++) {
+        if (comments.value[i].children && comments.value[i].children.length > 0) {
+          const childIndex = comments.value[i].children.findIndex(child => child.id === comment.id)
+          if (childIndex !== -1) {
+            const currentChild = comments.value[i].children[childIndex]
+            comments.value[i].children[childIndex] = {
+              ...currentChild,
+              isLiked: !currentChild.isLiked,
+              likeCount: currentChild.isLiked ? 
+                currentChild.likeCount + 1 : 
+                Math.max(0, currentChild.likeCount - 1)
+            }
+            break
+          }
+        }
+      }
+    }
+  }
+}
+
+// 异步加载评论点赞状态（不阻塞页面显示）
+const loadCommentLikeStatusAsync = async (comments) => {
+  if (!userStore.isLoggedIn || !comments.length) {
+    return
+  }
+  
+  console.log('开始异步查询评论点赞状态，评论数量:', comments.length)
+  
+  // 逐个查询评论点赞状态，不使用Promise.all
+  for (const comment of comments) {
+    // 查询主评论点赞状态
+    await loadSingleCommentLikeStatus(comment)
+    
+    // 查询子评论点赞状态
+    if (comment.children && comment.children.length > 0) {
+      for (const child of comment.children) {
+        await loadChildCommentLikeStatus(child)
+      }
+    }
+    
+    // 添加小延迟，避免请求过于频繁
+    await new Promise(resolve => setTimeout(resolve, 50))
+  }
+  
+  console.log('所有评论点赞状态查询完成')
+}
+
+// 修改加载评论函数
 const loadComments = async (page = 1) => {
   try {
     loading.value = true
     console.log('加载评论，内容ID:', props.contentId, '页码:', page)
     
-    // 在 loadComments 函数中
     const response = await getContentComments(props.contentId, {
-      pageNum: page,  // 修改为 pageNum
+      pageNum: page,
       pageSize: pageSize.value
     })
     
     console.log('评论列表响应:', response)
     
-    // 直接使用response作为数据源
     if (response && response.list && Array.isArray(response.list)) {
-      // 预处理评论数据，设置默认的点赞状态
+      // 预处理评论数据，设置默认点赞状态
       const processedComments = response.list.map(comment => ({
         ...comment,
-        isLiked: comment.isLiked === null ? false : comment.isLiked,
+        isLiked: false, // 默认为未点赞，后续异步查询真实状态
         children: comment.children ? comment.children.map(child => ({
           ...child,
-          isLiked: child.isLiked === null ? false : child.isLiked
+          isLiked: false // 默认为未点赞，后续异步查询真实状态
         })) : []
       }))
       
+      // 立即更新页面显示
       if (page === 1) {
         comments.value = processedComments
       } else {
         comments.value.push(...processedComments)
       }
-      // 在 loadComments 函数中的数据处理部分
+      
       totalComments.value = response.total || 0
-      totalPages.value = response.totalPages || 0 // 添加这行
-      // 修复hasMore的判断逻辑
+      totalPages.value = response.totalPages || 0
       hasMore.value = response.currentPage < response.totalPages
-      currentPage.value = response.currentPage // 使用响应中的currentPage
+      currentPage.value = response.currentPage
       
       console.log('评论数据处理完成:', {
         评论数量: response.list.length,
@@ -232,7 +443,11 @@ const loadComments = async (page = 1) => {
         是否有更多: hasMore.value
       })
       
-      // 如果没有更多数据，显示到底提示
+      // 页面显示后，异步查询点赞状态
+      nextTick(() => {
+        loadCommentLikeStatusAsync(processedComments)
+      })
+      
       if (!hasMore.value && comments.value.length > 0) {
         await nextTick()
         console.log('已加载所有评论，到达底部')
@@ -351,24 +566,6 @@ const handleDeleteComment = async (comment) => {
   } catch (error) {
     console.error('删除评论失败:', error)
     ElMessage.error('删除评论失败')
-  }
-}
-
-// 处理评论点赞
-const handleLikeComment = async (comment) => {
-  try {
-    if (comment.isLiked) {
-      await unlikeComment(comment.id)
-      comment.isLiked = false
-      comment.likeCount = Math.max(0, comment.likeCount - 1)
-    } else {
-      await likeComment(comment.id)
-      comment.isLiked = true
-      comment.likeCount = comment.likeCount + 1
-    }
-  } catch (error) {
-    console.error('评论点赞操作失败:', error)
-    ElMessage.error('操作失败')
   }
 }
 </script>

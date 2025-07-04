@@ -35,20 +35,52 @@
             <button
               v-if="userStore.isLoggedIn"
               @click="handleLike"
-              class="group flex items-center space-x-2 text-sm font-medium transition-all duration-200 hover:scale-105"
+              class="group relative flex items-center space-x-2 text-sm font-medium transition-all duration-300 hover:scale-110 transform-gpu"
               :class="comment.isLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'"
             >
-              <div class="relative">
-                <el-icon :size="16" class="transition-transform duration-200 group-hover:scale-110">
-                  <component :is="comment.isLiked ? 'StarFilled' : 'Star'" />
+              <!-- 背景光晕效果 -->
+              <div 
+                class="absolute inset-0 rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100"
+                :class="comment.isLiked ? 'bg-red-100 scale-150' : 'bg-red-50 scale-125'"
+              ></div>
+              
+              <!-- 图标容器 -->
+              <div class="relative z-10">
+                <el-icon 
+                  :size="16" 
+                  class="transition-all duration-300 group-hover:scale-125 drop-shadow-sm"
+                  :class="comment.isLiked ? 'animate-pulse' : ''"
+                >
+                  <StarFilled v-if="comment.isLiked" class="text-red-500 drop-shadow-md" />
+                  <Star v-else class="group-hover:text-red-400" />
                 </el-icon>
-                <div v-if="comment.isLiked" class="absolute inset-0 animate-ping">
-                  <el-icon :size="16" class="text-red-300">
-                    <StarFilled />
-                  </el-icon>
+                
+                <!-- 点赞时的粒子效果 -->
+                <div v-if="comment.isLiked" class="absolute inset-0 pointer-events-none">
+                  <div class="absolute -top-1 -left-1 w-2 h-2 bg-red-300 rounded-full animate-ping opacity-75"></div>
+                  <div class="absolute -top-1 -right-1 w-1.5 h-1.5 bg-pink-300 rounded-full animate-ping animation-delay-150 opacity-60"></div>
+                  <div class="absolute -bottom-1 -left-1 w-1 h-1 bg-red-400 rounded-full animate-ping animation-delay-300 opacity-50"></div>
                 </div>
+                
+                <!-- 心跳光晕效果（替代重复图标） -->
+                <div v-if="comment.isLiked" class="absolute inset-0 animate-pulse opacity-20">
+                  <div class="w-full h-full bg-red-300 rounded-full"></div>
+                </div>
+                
               </div>
-              <span class="select-none">{{ comment.likeCount || 0 }}</span>
+              
+              <!-- 点赞数量 -->
+              <span 
+                class="relative z-10 select-none font-semibold transition-all duration-300 group-hover:scale-110"
+                :class="comment.isLiked ? 'text-red-600' : 'group-hover:text-red-500'"
+              >
+                {{ comment.likeCount || 0 }}
+              </span>
+              
+              <!-- 点击波纹效果 -->
+              <div class="absolute inset-0 rounded-full overflow-hidden">
+                <div class="ripple-effect"></div>
+              </div>
             </button>
             
             <!-- 回复按钮 -->
@@ -166,7 +198,8 @@
                         :class="child.isLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'"
                       >
                         <el-icon :size="14" class="transition-transform duration-200 group-hover:scale-110">
-                          <component :is="child.isLiked ? 'StarFilled' : 'Star'" />
+                          <StarFilled v-if="child.isLiked" />
+                          <Star v-else />
                         </el-icon>
                         <span>{{ child.likeCount || 0 }}</span>
                       </button>
@@ -541,25 +574,88 @@ const handleChildDelete = async (child) => {
 }
 
 /* 点赞动画 */
+/* 点赞按钮美化样式 */
 @keyframes heartbeat {
-  0% { transform: scale(1) !important; }
-  50% { transform: scale(1.1) !important; }
-  100% { transform: scale(1) !important; }
+  0% { transform: scale(1); }
+  25% { transform: scale(1.1); }
+  50% { transform: scale(1.15); }
+  75% { transform: scale(1.1); }
+  100% { transform: scale(1); }
 }
 
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(180deg); }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* 动画延迟类 */
+.animation-delay-150 {
+  animation-delay: 150ms !important;
+}
+
+.animation-delay-300 {
+  animation-delay: 300ms !important;
+}
+
+/* 点击波纹效果 */
+.ripple-effect {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.3) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* 点赞按钮悬停效果 */
 .group:hover .group-hover\:animate-heartbeat {
-  animation: heartbeat 0.6s ease-in-out !important;
+  animation: heartbeat 0.8s ease-in-out infinite;
 }
 
-/* 移动端优化 */
+/* 点赞按钮激活时的波纹动画 */
+.group:active .ripple-effect {
+  animation: ripple 0.6s ease-out;
+}
+
+/* 渐变背景效果 */
+.group:hover .bg-gradient-to-r {
+  background: linear-gradient(45deg, rgba(239, 68, 68, 0.1), rgba(244, 63, 94, 0.1));
+}
+
+/* 3D变换优化 */
+.transform-gpu {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* 点赞状态的特殊效果 */
+.text-red-500.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* 移动端点赞按钮优化 */
 @media (max-width: 640px) {
-  .comment-item {
-    padding-top: 0.75rem !important;
-    padding-bottom: 0.75rem !important;
+  .group:hover {
+    transform: scale(1.05) !important;
   }
   
-  .comment-item:hover {
-    transform: none !important;
+  .group:active {
+    transform: scale(0.95) !important;
   }
 }
 </style>
