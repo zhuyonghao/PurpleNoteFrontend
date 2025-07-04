@@ -56,7 +56,7 @@
           <!-- 评论 -->
           <div style="display: flex !important; align-items: center !important; gap: 4px !important;">
             <el-icon size="14" class="text-gray-400"><ChatDotRound /></el-icon>
-            <span>{{ content.commentCount || 0 }}</span>
+            <span>{{ commentCount }}</span>
           </div>
           
          
@@ -67,9 +67,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { getContentCommentCount } from '@/api/comment'
 import { 
   StarFilled,   // 实心星形，用于已点赞状态
   Star,         // 空心星形，用于未点赞状态
@@ -92,6 +93,36 @@ const props = defineProps({
 const emit = defineEmits(['click', 'like'])
 
 const showLikeAnimation = ref(false)
+const commentCount = ref(props.content.commentCount || 0)
+
+// 异步加载评论数
+const loadCommentCount = async () => {
+  try {
+    const response = await getContentCommentCount(props.content.id)
+    console.log(`内容${props.content.id}的评论数:`, response)
+    
+    // 更新评论数
+    if (response && typeof response === 'object') {
+      if (response.data !== undefined) {
+        commentCount.value = response.data
+      } else if (response.count !== undefined) {
+        commentCount.value = response.count
+      } else {
+        commentCount.value = response
+      }
+    } else if (typeof response === 'number') {
+      commentCount.value = response
+    }
+  } catch (error) {
+    console.warn(`获取内容${props.content.id}评论数失败:`, error)
+    // 保持默认值
+  }
+}
+
+// 组件挂载后异步加载评论数
+onMounted(() => {
+  loadCommentCount()
+})
 
 const handleDoubleTapLike = () => {
   showLikeAnimation.value = true

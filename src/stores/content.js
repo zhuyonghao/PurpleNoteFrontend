@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { getContentPage, getContent, getAllContentPageOrderByTime } from '@/api/content'
 import { getLikeStatus } from '@/api/like'
 import { useUserStore } from '@/stores/user'
+import { getContentCommentCount } from '@/api/comment'
 
 export const useContentStore = defineStore('content', () => {
   const contentList = ref([])
@@ -182,6 +183,57 @@ export const useContentStore = defineStore('content', () => {
     hasMore.value = true
     currentPage.value = 1
   }
+
+  // 异步加载评论数
+  const loadCommentCountAsync = async (contents, startIndex = 0) => {
+  // 逐个加载评论数
+  for (let i = 0; i < contents.length; i++) {
+    const content = contents[i]
+    const contentIndex = startIndex + i
+    
+    try {
+      const response = await getContentCommentCount(content.id)
+      console.log(`内容${content.id}的评论数:`, response)
+      
+      // 立即更新对应位置的内容
+      if (contentList.value[contentIndex]) {
+        let commentCount = 0
+        if (response && typeof response === 'object') {
+          if (response.data !== undefined) {
+            commentCount = response.data
+          } else if (response.count !== undefined) {
+            commentCount = response.count
+          } else {
+            commentCount = response
+          }
+        } else if (typeof response === 'number') {
+          commentCount = response
+        }
+        
+        contentList.value[contentIndex] = {
+          ...contentList.value[contentIndex],
+          commentCount: commentCount
+        }
+      }
+    } catch (error) {
+      console.warn(`获取内容${content.id}评论数失败:`, error)
+    }
+    
+    // 添加小延迟，避免请求过于频繁
+    await new Promise(resolve => setTimeout(resolve, 50))
+  }
+}
+
+// 在 fetchContents 函数中调用
+const fetchContents = async (page = 1, refresh = false) => {
+  // ... existing code ...
+  
+  // 异步加载点赞状态和评论数
+  loadLikeStatusAsync(result.list || [], refresh || page === 1 ? 0 : contentList.value.length - (result.list || []).length)
+  loadCommentCountAsync(result.list || [], refresh || page === 1 ? 0 : contentList.value.length - (result.list || []).length)
+  
+  return result
+}
 
   return {
     contentList,

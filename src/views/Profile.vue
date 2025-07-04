@@ -47,6 +47,7 @@
       @content-click="viewContent"
       @edit-content="editContent"
       @delete-content="deleteContent"
+      @update-comment-count="handleUpdateCommentCount"
     />
   </MainLayout>
 </template>
@@ -548,6 +549,15 @@ const loadLikeStatusAsync = async (contents, startIndex = 0) => {
       }
       // 保持默认状态，不做额外处理
     }
+  }
+}
+
+// 处理评论数更新
+const handleUpdateCommentCount = (contentId, commentCount) => {
+  const index = contentList.value.findIndex(item => item.id === contentId)
+  if (index !== -1) {
+    contentList.value[index].commentCount = commentCount
+    console.log(`更新内容${contentId}的评论数为:`, commentCount)
   }
 }
 </script>

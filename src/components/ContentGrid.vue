@@ -141,7 +141,8 @@ import {
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { useRouter } from 'vue-router'
-import { ref, onMounted, onUnmounted } from 'vue'
+import { getContentCommentCount } from '@/api/comment'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 
 const userStore = useUserStore()
 const router = useRouter()
@@ -174,7 +175,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['contentClick', 'editContent', 'deleteContent', 'likeContent', 'loadMore'])
+const emit = defineEmits(['contentClick', 'editContent', 'deleteContent', 'likeContent', 'loadMore', 'updateCommentCount'])
 
 // 判断是否是自己的内容
 const isOwnContent = (content) => {
@@ -307,6 +308,55 @@ const formatDate = (dateString) => {
   
   return date.toLocaleDateString('zh-CN')
 }
+
+// 异步加载评论数
+const loadCommentCountAsync = async (contents, startIndex = 0) => {
+  // 逐个加载评论数
+  for (let i = 0; i < contents.length; i++) {
+    const content = contents[i]
+    const contentIndex = startIndex + i
+    
+    try {
+      const response = await getContentCommentCount(content.id)
+      console.log(`内容${content.id}的评论数:`, response)
+      
+      // 立即更新对应位置的内容
+      if (props.contentList[contentIndex]) {
+        // 直接修改 props.contentList 中的数据
+        let commentCount = 0
+        if (response && typeof response === 'object') {
+          if (response.data !== undefined) {
+            commentCount = response.data
+          } else if (response.count !== undefined) {
+            commentCount = response.count
+          } else {
+            commentCount = response
+          }
+        } else if (typeof response === 'number') {
+          commentCount = response
+        }
+        
+        // 触发父组件更新
+        emit('updateCommentCount', content.id, commentCount)
+      }
+    } catch (error) {
+      console.warn(`获取内容${content.id}评论数失败:`, error)
+    }
+    
+    // 添加小延迟，避免请求过于频繁
+    await new Promise(resolve => setTimeout(resolve, 50))
+  }
+}
+
+// 监听 contentList 变化，异步加载评论数
+watch(() => props.contentList, (newList) => {
+  if (newList && newList.length > 0) {
+    loadCommentCountAsync(newList)
+  }
+}, { immediate: true })
+
+// 删除重复的 emit 声明
+// const emit = defineEmits(['contentClick', 'editContent', 'deleteContent', 'likeContent', 'loadMore', 'updateCommentCount'])
 </script>
 
 <style scoped>

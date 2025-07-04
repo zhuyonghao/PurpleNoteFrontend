@@ -67,3 +67,12 @@ export const unlikeComment = (commentId) => {
 export const getCommentLikeStatus = (commentId) => {
   return request.get(`/comments/${commentId}/like/status`)
 }
+
+/** 
+ * 统计内容评论数 
+ * @param {string} contentId 内容ID 
+ * @returns {Promise} 返回评论数统计
+ */ 
+export const getContentCommentCount = (contentId) => {
+  return request.get(`/comments/content/${contentId}/count`)
+}
