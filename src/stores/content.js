@@ -217,6 +217,7 @@ export const useContentStore = defineStore('content', () => {
       }
     } catch (error) {
       console.warn(`获取内容${content.id}评论数失败:`, error)
+      // 只记录警告日志，没有弹窗通知
     }
     
     // 添加小延迟，避免请求过于频繁

@@ -115,7 +115,7 @@ const loadCommentCount = async () => {
     }
   } catch (error) {
     console.warn(`获取内容${props.content.id}评论数失败:`, error)
-    // 保持默认值
+    // 保持默认值 - 没有弹窗通知
   }
 }
 
