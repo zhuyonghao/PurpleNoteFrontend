@@ -172,6 +172,9 @@ const handleLogout = async () => {
 /* 桌面端导航 */
 .desktop-nav {
   display: none;
+  position: sticky;
+  top: 0;
+  height: 100vh;
 }
 
 @media (min-width: 768px) {
