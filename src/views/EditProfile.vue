@@ -40,8 +40,8 @@
                 :http-request="handleAvatarUpload"
                 accept="image/*"
               >
-                <el-button type="primary" plain class="upload-btn">
-                  <el-icon class="mr-1"><Upload /></el-icon>
+                <el-button class="upload-btn">
+                  <el-icon class="upload-icon"><Upload /></el-icon>
                   更换头像
                 </el-button>
               </el-upload>
@@ -271,14 +271,19 @@ onMounted(() => {
 
 .upload-btn {
   border-radius: 8px;
-  border-color: #E8E0ED;
+  border: 1px solid #E8E0ED;
   color: #9B8AA0;
+  background: white;
 }
 
 .upload-btn:hover {
   border-color: #B4A5BE;
   color: #9B8AA0;
   background: #F8F7FA;
+}
+
+.upload-icon {
+  margin-right: 4px;
 }
 
 .avatar-hint {
@@ -323,12 +328,5 @@ onMounted(() => {
   background: linear-gradient(135deg, #9B8AA0 0%, #B4A5BE 100%);
   border: none;
   font-weight: 500;
-  box-shadow: 0 2px 8px rgba(155, 138, 160, 0.25);
-  transition: all 0.2s ease;
-}
-
-.save-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(155, 138, 160, 0.35);
 }
 </style>

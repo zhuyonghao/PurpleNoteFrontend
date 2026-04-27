@@ -46,7 +46,7 @@
                   size="small"
                   :loading="followLoading"
                   class="follow-btn"
-                  @click="toggleFollow"
+                  @click.stop="toggleFollow"
                 >
                   {{ isFollowed ? '已关注' : '关注' }}
                 </el-button>
@@ -505,11 +505,6 @@ const handleAuthorClick = () => {
 }
 
 .is-loading {
-  animation: rotating 2s linear infinite;
-}
-
-@keyframes rotating {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  opacity: 0.6;
 }
 </style>

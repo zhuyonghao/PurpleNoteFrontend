@@ -463,13 +463,10 @@ const handleDeleteComment = async (comment) => {
   background: linear-gradient(135deg, #9B8AA0 0%, #B4A5BE 100%);
   border: none;
   font-size: 13px;
-  box-shadow: 0 2px 8px rgba(155, 138, 160, 0.2);
-  transition: all 0.2s ease;
 }
 
 .submit-btn:hover:not(.is-disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(155, 138, 160, 0.3);
+  opacity: 0.9;
 }
 
 /* 评论列表 */
@@ -550,11 +547,6 @@ const handleDeleteComment = async (comment) => {
 }
 
 .is-loading {
-  animation: rotating 2s linear infinite;
-}
-
-@keyframes rotating {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  opacity: 0.6;
 }
 </style>
