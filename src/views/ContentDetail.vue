@@ -57,13 +57,15 @@
                 <span class="publish-time">{{ formatDate(content.createdAt) }}</span>
                 <div class="action-buttons">
                   <el-button
-                    :type="content.isLiked ? 'primary' : 'default'"
-                    :icon="content.isLiked ? 'StarFilled' : 'Star'"
-                    size="small"
                     class="like-btn"
+                    :class="{ 'is-liked': content.isLiked }"
                     @click="handleLike"
                   >
-                    {{ content.likeCount || 0 }}
+                    <el-icon size="14" :class="content.isLiked ? 'is-active' : ''">
+                      <StarFilled v-if="content.isLiked" />
+                      <Star v-else />
+                    </el-icon>
+                    <span>{{ content.likeCount || 0 }}</span>
                   </el-button>
                 </div>
               </div>
@@ -101,7 +103,7 @@ import { useUserStore } from '@/stores/user'
 import { getContent } from '@/api/content'
 import { likeContent, cancelLike, getLikeStatus } from '@/api/like'
 import { followUser, unfollowUser, getFollowStatus, getFollowerCount } from '@/api/follow'
-import { User, ArrowLeft, Loading, Warning } from '@element-plus/icons-vue'
+import { User, ArrowLeft, Loading, Warning, Star, StarFilled } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -436,17 +438,42 @@ const handleAuthorClick = () => {
 }
 
 .like-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   border-radius: 18px;
   padding: 6px 14px;
   font-size: 13px;
   border-color: #E8E0ED;
-  color: #9B8AA0;
+  color: #9CA3AF;
+  background: white;
+  transition: all 0.2s ease;
 }
 
 .like-btn:hover {
   border-color: #B4A5BE;
   color: #9B8AA0;
   background: #F8F7FA;
+}
+
+.like-btn.is-liked {
+  border-color: #D4A5A5;
+  color: #D4A5A5;
+  background: #FDF9F9;
+}
+
+.like-btn.is-liked:hover {
+  border-color: #C49494;
+  color: #C49494;
+  background: #FDF5F5;
+}
+
+.like-btn :deep(.el-icon) {
+  transition: all 0.2s ease;
+}
+
+.like-btn :deep(.el-icon.is-active) {
+  color: #D4A5A5;
 }
 
 /* 加载状态 */
