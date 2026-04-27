@@ -1,10 +1,12 @@
 <template>
-  <div class="text-center py-12">
+  <div class="loading-wrapper">
     <div class="loading-container">
-      <el-icon class="is-loading text-3xl text-purple-500 mb-3">
-        <Loading />
-      </el-icon>
-      <p class="text-gray-600 font-medium">{{ message }}</p>
+      <div class="loading-spinner">
+        <el-icon class="is-loading">
+          <Loading />
+        </el-icon>
+      </div>
+      <p class="loading-message">{{ message }}</p>
     </div>
   </div>
 </template>
@@ -21,12 +23,48 @@ const props = defineProps({
 </script>
 
 <style scoped>
-.loading-container {
-  animation: pulse 2s infinite;
+.loading-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  padding: 40px 20px;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+.loading-container {
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  background: linear-gradient(135deg, #F3F0F5 0%, #E8E0ED 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(155, 138, 160, 0.1);
+}
+
+.is-loading {
+  font-size: 24px;
+  color: #9B8AA0;
+  animation: rotate 1.5s linear infinite;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-message {
+  font-size: 14px;
+  color: #9CA3AF;
+  font-weight: 500;
 }
 </style>

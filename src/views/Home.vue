@@ -1,53 +1,51 @@
 <template>
   <MainLayout>
     <!-- 顶部工具栏 -->
-    <el-header class="bg-white shadow-sm border-b border-gray-100 flex items-center justify-between px-6" height="64px">
-      <h1 class="text-xl font-semibold text-gray-800">首页</h1>
-      <div class="flex items-center space-x-3">
-        <!-- <el-button 
-          icon="Bell" 
-          circle 
-          :badge="hasNotification ? '1' : null" 
-          @click="handleNotificationClick" 
-        /> -->
-        <el-button icon="Refresh" circle @click="refreshContent" />
+    <el-header class="home-header" height="64px">
+      <h1 class="header-title">首页</h1>
+      <div class="header-actions">
+        <el-button
+          class="icon-btn"
+          icon="Refresh"
+          circle
+          @click="refreshContent"
+        />
       </div>
     </el-header>
-    
+
     <!-- 内容区域 -->
-    <div class="p-6 overflow-auto" style="height: calc(100vh - 64px);">
+    <div class="content-area">
       <!-- 瀑布流内容 -->
-      <WaterfallContainer 
+      <WaterfallContainer
         :items="contentStore.contentList || []"
         :has-more="contentStore.hasMore"
         @load-more="loadMore"
       >
         <template #default="{ item }">
-          <ContentCard 
-            :content="item" 
-            @like="handleLike" 
-            @click="viewDetail" 
-            class="content-card-hover"
+          <ContentCard
+            :content="item"
+            @like="handleLike"
+            @click="viewDetail"
           />
         </template>
       </WaterfallContainer>
-      
+
       <!-- 加载状态 -->
-      <LoadingState 
-        v-if="contentStore.loading" 
-        message="精彩内容加载中..." 
+      <LoadingState
+        v-if="contentStore.loading"
+        message="精彩内容加载中..."
       />
-      
+
       <!-- 没有更多内容 -->
-      <div v-if="!contentStore.hasMore && (contentStore.contentList?.length || 0) > 0" class="text-center py-12">
-        <div class="no-more-content">
-          <el-icon class="text-4xl text-gray-400 mb-3"><Check /></el-icon>
-          <p class="text-gray-500 font-medium">已经到底了，没有更多内容</p>
+      <div v-if="!contentStore.hasMore && (contentStore.contentList?.length || 0) > 0" class="end-of-content">
+        <div class="end-indicator">
+          <el-icon class="end-icon"><Check /></el-icon>
+          <p class="end-text">已经到底了，没有更多内容</p>
         </div>
       </div>
-      
+
       <!-- 空状态 -->
-      <EmptyState 
+      <EmptyState
         v-if="!contentStore.loading && (contentStore.contentList?.length || 0) === 0"
         title="还没有内容"
         description="成为第一个分享精彩内容的人吧！"
@@ -64,10 +62,10 @@ import MainLayout from '@/layouts/MainLayout.vue'
 import { onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { 
-  Bell, 
-  Refresh, 
-  Check 
+import {
+  Bell,
+  Refresh,
+  Check
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useContentStore } from '@/stores/content'
@@ -76,25 +74,20 @@ import ContentCard from '@/components/ContentCard.vue'
 import LoadingState from '@/components/LoadingState.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import WaterfallContainer from '@/components/WaterfallContainer.vue'
-import NavigationBar from '@/components/NavigationBar.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
 const contentStore = useContentStore()
 
-// 计算是否有通知
 const hasNotification = computed(() => {
-  // 这里可以根据实际的通知状态来判断
   return false
 })
 
 onMounted(async () => {
   console.log('Home 页面挂载')
-  
-  // 重置内容状态，防止重复内容
+
   contentStore.resetState()
-  
-  // 确保用户信息已加载
+
   if (!userStore.userInfo && userStore.token) {
     try {
       await userStore.fetchUserProfile()
@@ -102,8 +95,7 @@ onMounted(async () => {
       console.error('获取用户信息失败:', error)
     }
   }
-  
-  // 加载所有内容列表
+
   try {
     console.log('开始加载首页内容')
     await contentStore.fetchAllContentList(1, true)
@@ -114,21 +106,14 @@ onMounted(async () => {
   }
 })
 
-// 页面卸载时清理状态
 onUnmounted(() => {
   console.log('Home 页面卸载')
 })
 
-const handleNotificationClick = () => {
-  // 处理通知点击事件
-  console.log('通知被点击')
-  // 可以跳转到通知页面或显示通知列表
-}
-
 const refreshContent = async () => {
   try {
     console.log('刷新内容')
-    contentStore.resetState() // 重置状态
+    contentStore.resetState()
     await contentStore.fetchAllContentList(1, true)
     ElMessage.success('刷新成功')
   } catch (error) {
@@ -138,16 +123,15 @@ const refreshContent = async () => {
 }
 
 const handleLike = async (content) => {
-  // 检查用户是否已登录
   if (!userStore.isLoggedIn || !userStore.token) {
     ElMessage.warning('请先登录后再进行点赞操作')
     router.push('/login')
     return
   }
-  
+
   try {
     console.log('点赞操作开始，当前状态:', content.isLiked)
-    
+
     if (content.isLiked) {
       await cancelLike(content.id)
       content.isLiked = false
@@ -159,8 +143,7 @@ const handleLike = async (content) => {
       content.likeCount = (content.likeCount || 0) + 1
       console.log('点赞成功')
     }
-    
-    // 可选：重新获取点赞状态以确保数据一致性
+
     try {
       const likeStatusResponse = await getLikeStatus(content.id)
       content.isLiked = likeStatusResponse.isLiked || false
@@ -171,11 +154,10 @@ const handleLike = async (content) => {
     } catch (syncError) {
       console.warn('同步点赞状态失败:', syncError)
     }
-    
+
   } catch (error) {
     console.error('点赞操作失败:', error)
-    
-    // 如果是token相关错误，提示用户重新登录
+
     if (error.message && error.message.includes('token')) {
       ElMessage.error('登录已过期，请重新登录')
       userStore.logout()
@@ -197,7 +179,7 @@ const loadMore = async () => {
     currentPage: contentStore.currentPage,
     contentListLength: contentStore.contentList?.length
   })
-  
+
   if (!contentStore.hasMore || contentStore.loading) {
     console.log('跳过加载更多：', {
       hasMore: contentStore.hasMore,
@@ -205,7 +187,7 @@ const loadMore = async () => {
     })
     return
   }
-  
+
   try {
     console.log('开始调用 contentStore.loadMore()')
     await contentStore.loadMore()
@@ -218,45 +200,94 @@ const loadMore = async () => {
     console.error('加载更多失败:', error)
     ElMessage.error('加载更多失败，请重试')
   }
-  
+
   console.log('=== loadMore 结束 ===')
 }
 </script>
 
 <style scoped>
-.content-card-hover {
-  transition: all 0.3s ease;
+/* 顶部工具栏 */
+.home-header {
+  background: white;
+  border-bottom: 1px solid #F0EEF5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
 }
 
-.content-card-hover:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+.header-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
 }
 
-.no-more-content {
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid #E8E0ED;
+  background: white;
+  color: #9B8AA0;
+  transition: all 0.2s ease;
+}
+
+.icon-btn:hover {
+  background: #F8F7FA;
+  border-color: #B4A5BE;
+  color: #9B8AA0;
+  transform: rotate(90deg);
+}
+
+/* 内容区域 */
+.content-area {
+  padding: 20px;
+  min-height: calc(100vh - 64px);
+  background: linear-gradient(180deg, #FAFAFA 0%, #F5F5F5 100%);
+}
+
+/* 底部提示 */
+.end-of-content {
+  text-align: center;
+  padding: 32px 0;
   animation: fadeIn 0.5s ease;
 }
 
+.end-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 2px 12px rgba(155, 138, 160, 0.08);
+}
+
+.end-icon {
+  font-size: 18px;
+  color: #B4A5BE;
+}
+
+.end-text {
+  font-size: 14px;
+  color: #9CA3AF;
+  font-weight: 500;
+}
+
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* 自定义滚动条样式 */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

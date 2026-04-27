@@ -10,80 +10,140 @@
 
 body {
   font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
-  background-color: #f9fafb;
+  background: linear-gradient(180deg, #FAFAFA 0%, #F5F5F5 100%);
   color: #374151;
+  min-height: 100vh;
 }
 
-/* 瀑布流布局 */
+/* ==================== 莫兰迪紫色系变量 ==================== */
+:root {
+  --purple-muted: #9B8AA0;
+  --purple-light: #B4A5BE;
+  --purple-soft: #E8E0ED;
+  --rose-muted: #D4A5A5;
+  --bg-cream: #FAFAFA;
+  --bg-cream-dark: #F5F5F5;
+
+  --text-primary: #374151;
+  --text-secondary: #9CA3AF;
+  --text-muted: #6B7280;
+
+  --shadow-soft: 0 2px 15px rgba(155, 138, 160, 0.08);
+  --shadow-card: 0 2px 12px rgba(155, 138, 160, 0.06);
+  --shadow-hover: 0 8px 25px rgba(155, 138, 160, 0.12);
+  --shadow-button: 0 2px 8px rgba(155, 138, 160, 0.15);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow: 0.3s ease;
+}
+
+/* ==================== 瀑布流布局 ==================== */
 .waterfall {
   column-count: 4;
-  column-gap: 12px;
+  column-gap: 16px;
   padding: 16px;
 }
 
 .waterfall-item {
   break-inside: avoid;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
-/* 自定义滚动条 */
+/* ==================== 自定义滚动条 ==================== */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
+  background: #D4D0DB;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: #B4A5BE;
 }
 
-/* Element Plus 组件样式覆盖 */
+/* ==================== Element Plus 组件样式覆盖 ==================== */
+
+/* 主题色按钮 */
 .el-button--primary {
-  background-color: #8b5cf6;
-  border-color: #8b5cf6;
+  background-color: var(--purple-muted);
+  border-color: var(--purple-muted);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-normal);
 }
 
 .el-button--primary:hover {
-  background-color: #7c3aed;
-  border-color: #7c3aed;
+  background-color: var(--purple-light);
+  border-color: var(--purple-light);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-button);
+}
+
+.el-button--primary:active {
+  transform: translateY(0);
 }
 
 /* 卡片圆角 */
 .el-card {
-  border-radius: 12px;
+  border-radius: var(--radius-md);
+  border: none;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--transition-normal);
+}
+
+.el-card:hover {
+  box-shadow: var(--shadow-hover);
 }
 
 /* 按钮圆角 */
 .el-button {
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-normal);
 }
 
-/* 输入框圆角 */
-.el-input__inner {
-  border-radius: 8px;
+/* 输入框 */
+.el-input__wrapper {
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-normal);
+  box-shadow: 0 0 0 1px #E8E0ED inset;
 }
 
-/* 头像样式 */
+.el-input__wrapper:hover {
+  box-shadow: 0 0 0 1px var(--purple-light) inset;
+}
+
+.el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 1px var(--purple-muted) inset !important;
+}
+
+/* 头像 */
 .el-avatar {
   border-radius: 50%;
+  border: 2px solid var(--purple-soft);
 }
 
-/* 图片圆角 */
+/* ==================== 图片样式 ==================== */
 img {
-  border-radius: 8px;
+  border-radius: var(--radius-md);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
 }
 
-/* 动画效果 */
+/* ==================== 动画效果 ==================== */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s ease;
+  transition: opacity var(--transition-normal);
 }
 
 .fade-enter-from,
@@ -91,7 +151,35 @@ img {
   opacity: 0;
 }
 
-/* 文本截断 */
+/* 滑入动画 */
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all var(--transition-slow);
+}
+
+.slide-up-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* 缩放动画 */
+.scale-enter-active,
+.scale-leave-active {
+  transition: all var(--transition-normal);
+}
+
+.scale-enter-from,
+.scale-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+/* ==================== 文本截断 ==================== */
 .line-clamp-1 {
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -111,4 +199,55 @@ img {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* ==================== 通用悬停效果 ==================== */
+.hover-lift {
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* ==================== 背景纹理（可选） ==================== */
+.bg-pattern {
+  background-image: radial-gradient(circle at 1px 1px, #E8E0ED 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* ==================== 卡片组件 ==================== */
+.card-elevated {
+  background: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  transition: all var(--transition-normal);
+}
+
+.card-elevated:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+
+/* ==================== 加载动画 ==================== */
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* ==================== 渐变文字 ==================== */
+.text-gradient {
+  background: linear-gradient(135deg, var(--purple-muted), var(--purple-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }

@@ -1,21 +1,21 @@
 <template>
-  <div class="text-center py-20">
+  <div class="empty-state-wrapper">
     <div class="empty-state">
-      <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full flex items-center justify-center">
-        <el-icon class="text-4xl text-purple-400">
+      <div class="empty-icon-wrapper">
+        <el-icon class="empty-icon">
           <component :is="icon" />
         </el-icon>
       </div>
-      <h3 class="text-xl font-semibold text-gray-700 mb-2">{{ title }}</h3>
-      <p class="text-gray-500 mb-6">{{ description }}</p>
-      <el-button 
+      <h3 class="empty-title">{{ title }}</h3>
+      <p class="empty-description">{{ description }}</p>
+      <el-button
         v-if="showButton"
-        type="primary" 
+        type="primary"
         size="large"
-        class="publish-btn"
+        class="action-btn"
         @click="$emit('button-click')"
       >
-        <el-icon class="mr-2">
+        <el-icon class="btn-icon">
           <component :is="buttonIcon" />
         </el-icon>
         {{ buttonText }}
@@ -58,26 +58,77 @@ const emit = defineEmits(['button-click'])
 </script>
 
 <style scoped>
+.empty-state-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  padding: 40px 20px;
+}
+
 .empty-state {
-  animation: fadeIn 0.8s ease;
+  text-align: center;
+  animation: fadeInUp 0.6s ease;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.publish-btn {
-  background: linear-gradient(45deg, #a855f7, #ec4899);
-  border: none;
-  border-radius: 12px;
-  padding: 12px 24px;
+.empty-icon-wrapper {
+  width: 88px;
+  height: 88px;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, #F3F0F5 0%, #E8E0ED 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(155, 138, 160, 0.1);
+}
+
+.empty-icon {
+  font-size: 40px;
+  color: #B4A5BE;
+}
+
+.empty-title {
+  font-size: 18px;
   font-weight: 600;
-  transition: all 0.3s ease;
+  color: #374151;
+  margin-bottom: 8px;
 }
 
-.publish-btn:hover {
+.empty-description {
+  font-size: 14px;
+  color: #9CA3AF;
+  margin-bottom: 24px;
+}
+
+.action-btn {
+  padding: 12px 28px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #9B8AA0 0%, #B4A5BE 100%);
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(155, 138, 160, 0.25);
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(168, 85, 247, 0.3);
+  box-shadow: 0 6px 16px rgba(155, 138, 160, 0.35);
+}
+
+.btn-icon {
+  margin-right: 6px;
 }
 </style>

@@ -1,65 +1,63 @@
 <template>
-  <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden">
+  <div class="content-card hover-lift">
     <!-- 内容图片 -->
-    <div class="relative" @click="$emit('click', content)" style="display: flex !important; justify-content: center !important; align-items: center !important; height: 200px !important; overflow: hidden !important;">
-      <img 
-        :src="content.mediaUrl || '/placeholder.jpg'" 
+    <div class="image-wrapper" @click="$emit('click', content)">
+      <img
+        :src="content.mediaUrl || '/placeholder.jpg'"
         :alt="content.title"
-        class="w-full h-full object-cover"
+        class="content-image"
         loading="lazy"
-        style="width: 100% !important; height: 100% !important; object-fit: cover !important;"
       />
+      <!-- 悬停叠加层 -->
+      <div class="image-overlay">
+        <span class="view-text">查看详情</span>
+      </div>
     </div>
-    
+
     <!-- 标题和描述 -->
-    <div class="p-3" style="text-align: center !important;">
-      <h3 class="font-medium text-gray-800 text-sm mb-2 line-clamp-2" @click="$emit('click', content)" style="text-align: center !important;">
+    <div class="card-content">
+      <h3 class="card-title line-clamp-2" @click="$emit('click', content)">
         {{ content.title }}
       </h3>
-      
+
       <!-- 作者信息 -->
-      <div class="mb-2" style="display: flex !important; justify-content: center !important; align-items: center !important;">
-        <div class="flex items-center space-x-2 cursor-pointer" @click="handleAuthorClick" style="display: flex !important; align-items: center !important; gap: 8px !important;">
-          <el-avatar :src="content.userAvatarUrl" :size="20">
-            <el-icon><User /></el-icon>
-          </el-avatar>
-          <span class="text-xs text-gray-500">{{ content.userName }}</span>
-        </div>
+      <div class="author-info" @click="handleAuthorClick">
+        <el-avatar :src="content.userAvatarUrl" :size="24">
+          <el-icon><User /></el-icon>
+        </el-avatar>
+        <span class="author-name">{{ content.userName }}</span>
       </div>
-      
+
       <!-- 标签 -->
-      <div class="mb-2" v-if="content.tags && content.tags.length > 0" style="display: flex !important; justify-content: center !important; flex-wrap: wrap !important; gap: 4px !important;">
-        <span 
-          v-for="tag in content.tags.slice(0, 2)" 
+      <div class="tags-wrapper" v-if="content.tags && content.tags.length > 0">
+        <span
+          v-for="tag in content.tags.slice(0, 2)"
           :key="tag"
-          class="text-xs text-primary-600 bg-primary-50 px-2 py-1 rounded"
+          class="tag"
         >
           #{{ tag }}
         </span>
       </div>
-      
+
       <!-- 互动按钮 -->
-      <div class="text-gray-500 text-xs" style="display: flex !important; justify-content: center !important; align-items: center !important;">
-        <div style="display: flex !important; align-items: center !important; gap: 16px !important;">
-          <!-- 点赞 -->
-          <div style="display: flex !important; align-items: center !important; gap: 4px !important; cursor: pointer;" @click.stop="$emit('like', content)">
-            <el-icon 
-              :class="content.isLiked ? 'text-yellow-500' : 'text-gray-400'"
-              size="14"
-            >
-              <StarFilled v-if="content.isLiked" />
-              <Star v-else />
-            </el-icon>
-            <span>{{ content.likeCount || 0 }}</span>
-          </div>
-          
-          <!-- 评论 -->
-          <div style="display: flex !important; align-items: center !important; gap: 4px !important;">
-            <el-icon size="14" class="text-gray-400"><ChatDotRound /></el-icon>
-            <span>{{ commentCount }}</span>
-          </div>
-          
-         
+      <div class="action-bar">
+        <!-- 点赞 -->
+        <div
+          class="action-item"
+          :class="{ 'is-liked': content.isLiked }"
+          @click.stop="$emit('like', content)"
+        >
+          <el-icon size="14">
+            <StarFilled v-if="content.isLiked" />
+            <Star v-else />
+          </el-icon>
+          <span class="action-count">{{ content.likeCount || 0 }}</span>
+        </div>
+
+        <!-- 评论 -->
+        <div class="action-item">
+          <el-icon size="14"><ChatDotRound /></el-icon>
+          <span class="action-count">{{ commentCount }}</span>
         </div>
       </div>
     </div>
@@ -67,17 +65,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { getContentCommentCount } from '@/api/comment'
-import { 
-  StarFilled,   // 实心星形，用于已点赞状态
-  Star,         // 空心星形，用于未点赞状态
-  User, 
-  ChatDotRound, 
-  Share,
-  Collection    // 收藏图标
+import {
+  StarFilled,
+  Star,
+  User,
+  ChatDotRound
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -92,16 +88,12 @@ const props = defineProps({
 
 const emit = defineEmits(['click', 'like'])
 
-const showLikeAnimation = ref(false)
 const commentCount = ref(props.content.commentCount || 0)
 
 // 异步加载评论数
 const loadCommentCount = async () => {
   try {
     const response = await getContentCommentCount(props.content.id)
-    console.log(`内容${props.content.id}的评论数:`, response)
-    
-    // 更新评论数
     if (response && typeof response === 'object') {
       if (response.data !== undefined) {
         commentCount.value = response.data
@@ -115,54 +107,188 @@ const loadCommentCount = async () => {
     }
   } catch (error) {
     console.warn(`获取内容${props.content.id}评论数失败:`, error)
-    // 保持默认值 - 没有弹窗通知
   }
 }
 
-// 组件挂载后异步加载评论数
-onMounted(() => {
-  loadCommentCount()
-})
+loadCommentCount()
 
-const handleDoubleTapLike = () => {
-  showLikeAnimation.value = true
-  setTimeout(() => {
-    showLikeAnimation.value = false
-  }, 1000)
-  // 触发点赞事件
-  emit('like', props.content)
-}
-
-// 处理作者头像点击事件
+// 处理作者点击
 const handleAuthorClick = () => {
-  // 添加调试信息
-  console.log('Content data:', props.content)
-  
-  // 使用接口返回的userId进行跳转
   const userId = props.content.userId
-  const userName = props.content.userName
-  
-  if (!userId) {
-    console.warn('无法获取用户ID')
-    return
-  }
-  
-  // 如果是当前用户，跳转到个人主页
+  if (!userId) return
+
   if (userId === userStore.userInfo?.id) {
     router.push('/profile')
   } else {
-    // 否则跳转到指定用户的主页
     router.push(`/profile/${userId}`)
   }
 }
 </script>
 
 <style scoped>
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+.content-card {
+  background: white;
+  border-radius: 12px;
   overflow: hidden;
-  text-align: center !important;
+  box-shadow: 0 2px 12px rgba(155, 138, 160, 0.06);
+  transition: all 0.2s ease;
+  border: 1px solid #F0EEF5;
+}
+
+.content-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(155, 138, 160, 0.12);
+  border-color: #E8E0ED;
+}
+
+/* 图片容器 */
+.image-wrapper {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.content-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+  transition: transform 0.3s ease;
+}
+
+.content-card:hover .content-image {
+  transform: scale(1.03);
+}
+
+/* 悬停叠加层 */
+.image-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(155, 138, 160, 0) 0%,
+    rgba(155, 138, 160, 0.4) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.content-card:hover .image-overlay {
+  opacity: 1;
+}
+
+.view-text {
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 16px;
+  background: rgba(155, 138, 160, 0.8);
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
+}
+
+/* 卡片内容 */
+.card-content {
+  padding: 14px;
+}
+
+/* 标题 */
+.card-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 10px;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.card-title:hover {
+  color: #9B8AA0;
+}
+
+/* 作者信息 */
+.author-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  padding: 4px 0;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.author-info:hover {
+  background: #F8F7FA;
+}
+
+.author-name {
+  font-size: 12px;
+  color: #6B7280;
+}
+
+/* 标签 */
+.tags-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.tag {
+  font-size: 11px;
+  color: #9B8AA0;
+  background: #F3F0F5;
+  padding: 3px 10px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.tag:hover {
+  background: #E8E0ED;
+  color: #7A6A7D;
+}
+
+/* 操作栏 */
+.action-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-top: 10px;
+  border-top: 1px solid #F5F3F7;
+}
+
+.action-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #9CA3AF;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.action-item:hover {
+  background: #F8F7FA;
+  color: #6B7280;
+}
+
+.action-item.is-liked {
+  color: #D4A5A5;
+}
+
+.action-item.is-liked:hover {
+  color: #C49595;
+}
+
+.action-count {
+  font-weight: 500;
 }
 </style>

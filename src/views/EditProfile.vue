@@ -3,9 +3,10 @@
     <!-- 顶部导航 -->
     <PageHeader @back="handleBack">
       <template #actions>
-        <el-button 
-          type="primary" 
+        <el-button
+          type="primary"
           :loading="saving"
+          class="save-btn"
           @click="handleSave"
         >
           保存
@@ -14,60 +15,62 @@
     </PageHeader>
 
     <!-- 编辑表单 -->
-    <div class="max-w-2xl mx-auto px-4 py-6">
-      <el-form 
+    <div class="edit-container">
+      <el-form
         ref="formRef"
         :model="formData"
         :rules="rules"
         label-width="80px"
-        class="bg-white rounded-lg p-6 shadow-sm"
+        class="edit-form"
       >
         <!-- 头像上传 -->
         <el-form-item label="头像">
-          <div class="flex items-center space-x-4">
-            <el-avatar 
-              :src="formData.avatarUrl" 
+          <div class="avatar-section">
+            <el-avatar
+              :src="formData.avatarUrl"
               :size="80"
-              class="border-2 border-gray-200"
+              class="avatar"
             >
-              <el-icon size="40"><User /></el-icon>
+              <el-icon size="32"><User /></el-icon>
             </el-avatar>
-            <div>
+            <div class="avatar-actions">
               <el-upload
                 :show-file-list="false"
                 :before-upload="beforeAvatarUpload"
                 :http-request="handleAvatarUpload"
                 accept="image/*"
               >
-                <el-button type="primary" plain>
+                <el-button type="primary" plain class="upload-btn">
                   <el-icon class="mr-1"><Upload /></el-icon>
                   更换头像
                 </el-button>
               </el-upload>
-              <p class="text-xs text-gray-500 mt-1">支持 JPG、PNG 格式，文件大小不超过 2MB</p>
+              <p class="avatar-hint">支持 JPG、PNG 格式，文件大小不超过 2MB</p>
             </div>
           </div>
         </el-form-item>
 
         <!-- 用户名 -->
         <el-form-item label="用户名" prop="username">
-          <el-input 
+          <el-input
             v-model="formData.username"
             placeholder="请输入用户名"
             maxlength="20"
             show-word-limit
+            class="username-input"
           />
         </el-form-item>
 
         <!-- 个人简介 -->
         <el-form-item label="个人简介" prop="bio">
-          <el-input 
+          <el-input
             v-model="formData.bio"
             type="textarea"
             placeholder="介绍一下自己吧..."
             :rows="4"
             maxlength="200"
             show-word-limit
+            class="bio-input"
           />
         </el-form-item>
       </el-form>
@@ -90,17 +93,14 @@ const userStore = useUserStore()
 const formRef = ref()
 const saving = ref(false)
 
-// 表单数据
 const formData = reactive({
   avatarUrl: '',
   username: '',
   bio: ''
 })
 
-// 原始数据，用于检测是否有修改
 const originalData = reactive({})
 
-// 表单验证规则
 const rules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
@@ -111,7 +111,6 @@ const rules = {
   ]
 }
 
-// 初始化数据
 const initData = () => {
   if (userStore.userInfo) {
     Object.assign(formData, {
@@ -119,18 +118,14 @@ const initData = () => {
       username: userStore.userInfo.username || '',
       bio: userStore.userInfo.bio || ''
     })
-    
-    // 保存原始数据
     Object.assign(originalData, formData)
   }
 }
 
-// 检查是否有修改
 const hasChanges = () => {
   return Object.keys(formData).some(key => formData[key] !== originalData[key])
 }
 
-// 返回处理
 const handleBack = async () => {
   if (hasChanges()) {
     try {
@@ -152,51 +147,41 @@ const handleBack = async () => {
   }
 }
 
-// 保存处理
 const handleSave = async () => {
   try {
-    // 表单验证
     await formRef.value.validate()
-    
+
     saving.value = true
-    
-    // 只提交有修改的字段
+
     const changedData = {}
     Object.keys(formData).forEach(key => {
       if (formData[key] !== originalData[key]) {
         changedData[key] = formData[key]
       }
     })
-    
+
     if (Object.keys(changedData).length === 0) {
       ElMessage.info('没有修改任何信息')
       return
     }
-    
-    console.log('提交修改的数据:', changedData)
-    
-    // 调用更新接口
+
     await updateUserProfile(changedData)
-    
-    // 更新本地用户信息
     await userStore.fetchUserProfile()
-    
+
     ElMessage.success('保存成功')
     router.back()
-    
+
   } catch (error) {
-    console.error('保存失败:', error)
     ElMessage.error('保存失败，请重试')
   } finally {
     saving.value = false
   }
 }
 
-// 头像上传前验证
 const beforeAvatarUpload = (file) => {
   const isImage = file.type.startsWith('image/')
   const isLt2M = file.size / 1024 / 1024 < 2
-  
+
   if (!isImage) {
     ElMessage.error('只能上传图片文件')
     return false
@@ -208,52 +193,34 @@ const beforeAvatarUpload = (file) => {
   return true
 }
 
-// 头像上传处理
 const handleAvatarUpload = async ({ file }) => {
   try {
-    console.log('开始上传头像:', file.name)
-    
     const response = await uploadAvatar(file)
-    console.log('头像上传响应:', response)
-    
-    // 处理响应数据，清理格式
+
     if (response) {
       let avatarUrl = ''
-      
+
       if (typeof response === 'string') {
-        // 如果直接返回字符串
         avatarUrl = response.trim().replace(/`/g, '')
       } else if (response.url) {
-        // 如果是对象且有url字段
         avatarUrl = response.url.trim().replace(/`/g, '')
       } else if (response.avatarUrl) {
-        // 如果是对象且有avatarUrl字段
         avatarUrl = response.avatarUrl.trim().replace(/`/g, '')
       } else {
-        // 其他情况，尝试直接使用response
         avatarUrl = String(response).trim().replace(/`/g, '')
       }
-      
-      console.log('处理后的URL:', avatarUrl)
-      
+
       if (avatarUrl && (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://'))) {
         formData.avatarUrl = avatarUrl
         ElMessage.success('头像上传成功')
-        console.log('新头像URL:', avatarUrl)
       } else {
-        console.error('URL格式不正确:', avatarUrl)
         throw new Error(`获取到的URL格式不正确: ${avatarUrl}`)
       }
     } else {
       throw new Error('上传响应数据无效')
     }
   } catch (error) {
-    console.error('头像上传失败:', error)
-    if (error.response && error.response.data && error.response.data.message) {
-      ElMessage.error(`头像上传失败：${error.response.data.message}`)
-    } else {
-      ElMessage.error('头像上传失败，请重试')
-    }
+    ElMessage.error('头像上传失败，请重试')
   }
 }
 
@@ -263,11 +230,105 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.el-form-item {
+.edit-container {
+  padding: 24px 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.edit-form {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 16px rgba(155, 138, 160, 0.08);
+  border: 1px solid #F0EEF5;
+}
+
+:deep(.el-form-item) {
   margin-bottom: 24px;
 }
 
-.el-upload {
-  display: inline-block;
+:deep(.el-form-item__label) {
+  color: #374151;
+  font-weight: 500;
+}
+
+/* 头像区域 */
+.avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.avatar {
+  border: 3px solid #E8E0ED;
+  box-shadow: 0 4px 12px rgba(155, 138, 160, 0.15);
+}
+
+.avatar-actions {
+  flex: 1;
+}
+
+.upload-btn {
+  border-radius: 8px;
+  border-color: #E8E0ED;
+  color: #9B8AA0;
+}
+
+.upload-btn:hover {
+  border-color: #B4A5BE;
+  color: #9B8AA0;
+  background: #F8F7FA;
+}
+
+.avatar-hint {
+  font-size: 12px;
+  color: #9CA3AF;
+  margin-top: 8px;
+}
+
+/* 输入框样式 */
+:deep(.el-input__wrapper) {
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px #E8E0ED inset;
+  transition: all 0.2s ease;
+}
+
+:deep(.el-input__wrapper:hover) {
+  box-shadow: 0 0 0 1px #B4A5BE inset;
+}
+
+:deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 1px #9B8AA0 inset !important;
+}
+
+:deep(.el-textarea__wrapper) {
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px #E8E0ED inset;
+  transition: all 0.2s ease;
+}
+
+:deep(.el-textarea__wrapper:hover) {
+  box-shadow: 0 0 0 1px #B4A5BE inset;
+}
+
+:deep(.el-textarea__wrapper.is-focus) {
+  box-shadow: 0 0 0 1px #9B8AA0 inset !important;
+}
+
+/* 保存按钮 */
+.save-btn {
+  padding: 8px 24px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #9B8AA0 0%, #B4A5BE 100%);
+  border: none;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(155, 138, 160, 0.25);
+  transition: all 0.2s ease;
+}
+
+.save-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(155, 138, 160, 0.35);
 }
 </style>

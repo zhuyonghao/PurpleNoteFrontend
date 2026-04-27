@@ -1,14 +1,14 @@
 <template>
   <div class="max-w-6xl mx-auto px-4">
-    <div 
+    <div
       ref="containerRef"
       class="waterfall-container"
     >
-      <div 
-        v-for="(item, index) in items" 
+      <div
+        v-for="(item, index) in items"
         :key="getItemKey(item, index)"
         class="waterfall-item"
-        :style="{ animationDelay: `${index * 0.1}s` }"
+        :style="{ animationDelay: `${index * 0.08}s` }"
       >
         <slot :item="item" :index="index" />
       </div>
@@ -32,7 +32,6 @@ const props = defineProps({
     type: String,
     default: 'id'
   },
-  // 新增：指定滚动容器选择器
   scrollContainer: {
     type: String,
     default: null
@@ -49,27 +48,14 @@ const getItemKey = (item, index) => {
   return item[props.itemKey] || index
 }
 
-// 监听滚动事件
 const handleScroll = () => {
-  console.log('滚动事件触发', {
-    hasMore: props.hasMore,
-    isLoading,
-    scrollElement: scrollElement === window ? 'window' : 'container'
-  })
-  
-  if (!props.hasMore || isLoading) {
-    console.log('跳过加载更多:', { hasMore: props.hasMore, isLoading })
-    return
-  }
-  
+  if (!props.hasMore || isLoading) return
+
   const now = Date.now()
-  if (now - lastTriggerTime < 1000) {
-    console.log('防抖跳过，距离上次触发时间:', now - lastTriggerTime)
-    return
-  }
-  
+  if (now - lastTriggerTime < 1000) return
+
   let scrollTop, scrollHeight, clientHeight
-  
+
   if (scrollElement === window) {
     scrollTop = document.documentElement.scrollTop
     scrollHeight = document.documentElement.scrollHeight
@@ -79,25 +65,14 @@ const handleScroll = () => {
     scrollHeight = scrollElement.scrollHeight
     clientHeight = scrollElement.clientHeight
   }
-  
-  console.log('滚动位置信息:', {
-    scrollTop,
-    scrollHeight,
-    clientHeight,
-    distance: scrollHeight - (scrollTop + clientHeight),
-    shouldTrigger: scrollTop + clientHeight >= scrollHeight - 200
-  })
-  
+
   if (scrollTop + clientHeight >= scrollHeight - 200) {
     isLoading = true
     lastTriggerTime = now
-    
-    console.log('触发加载更多，当前时间:', now)
     emit('load-more')
-    
+
     setTimeout(() => {
       isLoading = false
-      console.log('重置加载状态')
     }, 2000)
   }
 }
@@ -107,7 +82,7 @@ const throttle = (func, delay) => {
   let lastExecTime = 0
   return function (...args) {
     const currentTime = Date.now()
-    
+
     if (currentTime - lastExecTime > delay) {
       func.apply(this, args)
       lastExecTime = currentTime
@@ -124,15 +99,12 @@ const throttle = (func, delay) => {
 const throttledScrollHandler = throttle(handleScroll, 300)
 
 onMounted(() => {
-  // 根据props决定监听哪个元素的滚动事件
   if (props.scrollContainer) {
     scrollElement = document.querySelector(props.scrollContainer)
     if (!scrollElement) {
-      console.warn(`找不到滚动容器: ${props.scrollContainer}，使用window`)
       scrollElement = window
     }
   } else {
-    // 自动查找最近的滚动容器
     let parent = containerRef.value?.parentElement
     while (parent) {
       const style = window.getComputedStyle(parent)
@@ -142,13 +114,12 @@ onMounted(() => {
       }
       parent = parent.parentElement
     }
-    
+
     if (!scrollElement) {
       scrollElement = window
     }
   }
-  
-  console.log('监听滚动元素:', scrollElement)
+
   scrollElement.addEventListener('scroll', throttledScrollHandler, { passive: true })
 })
 
@@ -162,25 +133,24 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* 瀑布流容器 */
 .waterfall-container {
   column-count: auto;
-  column-width: 300px;
-  column-gap: 20px;
-  padding: 0 10px;
+  column-width: 280px;
+  column-gap: 16px;
+  padding: 0 6px;
 }
 
 .waterfall-item {
   break-inside: avoid;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   opacity: 0;
-  animation: fadeInUp 0.6s ease forwards;
+  animation: fadeInUp 0.5s ease forwards;
 }
 
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(24px);
   }
   to {
     opacity: 1;

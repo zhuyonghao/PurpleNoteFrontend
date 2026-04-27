@@ -1,24 +1,21 @@
 <template>
-  <div class="max-w-6xl mx-auto px-4 py-6 pb-20">
+  <div class="content-grid">
     <!-- 瀑布流容器 -->
-    <div 
-      ref="containerRef"
-      class="waterfall-container"
-    >
-      <div 
-        v-for="(item, index) in contentList" 
+    <div ref="containerRef" class="waterfall-container">
+      <div
+        v-for="(item, index) in contentList"
         :key="item.id"
-        class="waterfall-item bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden relative group"
-        :style="{ animationDelay: `${index * 0.1}s` }"
+        class="waterfall-item"
+        :style="{ animationDelay: `${index * 0.05}s` }"
         @click="handleContentClick(item)"
       >
-        <!-- 操作菜单 - 只在自己的内容上显示 -->
-        <div v-if="showActions && isOwnContent(item)" class="absolute top-2 right-2 z-10">
+        <!-- 操作菜单 -->
+        <div v-if="showActions && isOwnContent(item)" class="item-actions">
           <el-dropdown @command="(command) => handleAction(command, item)" trigger="click">
-            <el-button 
-              size="small" 
-              circle 
-              class="opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 backdrop-blur-sm"
+            <el-button
+              size="small"
+              circle
+              class="action-btn"
               @click.stop
             >
               <el-icon><MoreFilled /></el-icon>
@@ -29,7 +26,7 @@
                   <el-icon><Edit /></el-icon>
                   编辑
                 </el-dropdown-item>
-                <el-dropdown-item command="delete" class="text-red-500">
+                <el-dropdown-item command="delete" class="delete-item">
                   <el-icon><Delete /></el-icon>
                   删除
                 </el-dropdown-item>
@@ -38,107 +35,91 @@
           </el-dropdown>
         </div>
 
-        <!-- 内容图片 - 修改为固定高度 -->
-        <div class="relative" style="display: flex !important; justify-content: center !important; align-items: center !important; height: 200px !important; overflow: hidden !important;">
-          <img 
-            :src="item.mediaUrl || '/placeholder.jpg'" 
+        <!-- 内容图片 -->
+        <div class="item-image">
+          <img
+            :src="item.mediaUrl || '/placeholder.jpg'"
             :alt="item.title"
-            class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
-            style="width: 100% !important; height: 100% !important; object-fit: cover !important;"
           />
-        </div>
-        
-        <!-- 内容信息 -->
-        <div class="p-3" style="text-align: center !important;">
-          <!-- 标题 -->
-          <h3 class="font-medium text-gray-800 text-sm mb-2 line-clamp-2" style="text-align: center !important;">
-            {{ item.title }}
-          </h3>
-          
-          <!-- 作者信息 -->
-          <div class="mb-2" style="display: flex !important; justify-content: center !important; align-items: center !important;">
-            <div class="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity" @click.stop="handleAuthorClick(item)" style="display: flex !important; align-items: center !important; gap: 8px !important;">
-              <el-avatar :src="item.userAvatarUrl" :size="20">
-                <el-icon><User /></el-icon>
-              </el-avatar>
-              <span class="text-xs text-gray-500">{{ item.userName }}</span>
-            </div>
+          <div class="image-overlay">
+            <span class="view-text">查看</span>
           </div>
-          
+        </div>
+
+        <!-- 内容信息 -->
+        <div class="item-content">
+          <h3 class="item-title line-clamp-2">{{ item.title }}</h3>
+
+          <!-- 作者信息 -->
+          <div class="author-row" @click.stop="handleAuthorClick(item)">
+            <el-avatar :src="item.userAvatarUrl" :size="18">
+              <el-icon><User /></el-icon>
+            </el-avatar>
+            <span class="author-name">{{ item.userName }}</span>
+          </div>
+
           <!-- 标签 -->
-          <div class="mb-2" v-if="item.tags && item.tags.length > 0" style="display: flex !important; justify-content: center !important; flex-wrap: wrap !important; gap: 4px !important;">
-            <span 
-              v-for="tag in item.tags.slice(0, 2)" 
-              :key="tag"
-              class="text-xs text-primary-600 bg-primary-50 px-2 py-1 rounded"
-            >
+          <div class="tags-row" v-if="item.tags && item.tags.length > 0">
+            <span v-for="tag in item.tags.slice(0, 2)" :key="tag" class="tag">
               #{{ tag }}
             </span>
           </div>
-          
-          <!-- 互动按钮 -->
-          <div class="text-gray-500 text-xs" style="display: flex !important; justify-content: center !important; align-items: center !important;">
-            <div style="display: flex !important; align-items: center !important; gap: 16px !important;">
-              <!-- 点赞 -->
-              <div style="display: flex !important; align-items: center !important; gap: 4px !important; cursor: pointer;" @click.stop="handleLike(item)">
-                <el-icon 
-                  :class="item.isLiked ? 'text-yellow-500' : 'text-gray-400'"
-                  size="14"
-                >
-                  <StarFilled v-if="item.isLiked" />
-                  <Star v-else />
-                </el-icon>
-                <span>{{ item.likeCount || 0 }}</span>
-              </div>
-              
-              <!-- 评论 -->
-              <div style="display: flex !important; align-items: center !important; gap: 4px !important;">
-                <el-icon size="14" class="text-gray-400"><ChatDotRound /></el-icon>
-                <span>{{ item.commentCount || 0 }}</span>
-              </div>
-              
+
+          <!-- 互动 -->
+          <div class="互动-row">
+            <div class="互动-item" @click.stop="handleLike(item)">
+              <el-icon
+                :class="item.isLiked ? 'is-liked' : ''"
+                size="13"
+              >
+                <StarFilled v-if="item.isLiked" />
+                <Star v-else />
+              </el-icon>
+              <span>{{ item.likeCount || 0 }}</span>
+            </div>
+            <div class="互动-item">
+              <el-icon size="13"><ChatDotRound /></el-icon>
+              <span>{{ item.commentCount || 0 }}</span>
             </div>
           </div>
         </div>
       </div>
     </div>
-    
-    <!-- 加载更多提示 -->
-    <div v-if="loadingMore" class="text-center py-4">
+
+    <!-- 加载更多 -->
+    <div v-if="loadingMore" class="loading-more">
       <el-icon class="is-loading mr-2"><Loading /></el-icon>
-      <span class="text-gray-500">加载中...</span>
+      <span>加载中...</span>
     </div>
-    
-    <!-- 没有更多数据提示 -->
-    <div v-else-if="!hasMore && contentList.length > 0" class="text-center py-4">
-      <span class="text-gray-400">没有更多内容了</span>
+
+    <!-- 底部提示 -->
+    <div v-else-if="!hasMore && contentList.length > 0" class="no-more">
+      <span>没有更多内容了</span>
     </div>
-    
+
     <!-- 空状态 -->
-    <div v-if="contentList.length === 0 && !loading" class="text-center py-16">
-      <el-icon size="64" class="text-gray-300 mb-4"><Document /></el-icon>
-      <p class="text-gray-500">{{ emptyText }}</p>
+    <div v-if="contentList.length === 0 && !loading" class="empty-state">
+      <el-icon size="56" class="empty-icon"><Document /></el-icon>
+      <p class="empty-text">{{ emptyText }}</p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { 
-  Promotion, 
-  Loading, 
-  Document, 
-  MoreFilled, 
-  Edit, 
+import {
+  Promotion,
+  Loading,
+  Document,
+  MoreFilled,
+  Edit,
   Delete,
   StarFilled,
   Star,
   User,
-  ChatDotRound,
-  Share,
-  Collection
+  ChatDotRound
 } from '@element-plus/icons-vue'
-import { ElMessageBox, ElMessage } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { useRouter } from 'vue-router'
 import { getContentCommentCount } from '@/api/comment'
@@ -177,42 +158,29 @@ const props = defineProps({
 
 const emit = defineEmits(['contentClick', 'editContent', 'deleteContent', 'likeContent', 'loadMore', 'updateCommentCount'])
 
-// 判断是否是自己的内容
 const isOwnContent = (content) => {
   return content.userId === userStore.userInfo?.id || content.authorId === userStore.userInfo?.id
 }
 
-// 处理内容点击
 const handleContentClick = (item) => {
   emit('contentClick', item)
 }
 
-// 处理作者头像点击事件
 const handleAuthorClick = (item) => {
-  console.log('Content data:', item)
-  
   const userId = item.userId
-  
-  if (!userId) {
-    console.warn('无法获取用户ID')
-    return
-  }
-  
-  // 如果是当前用户，跳转到个人主页
+  if (!userId) return
+
   if (userId === userStore.userInfo?.id) {
     router.push('/profile')
   } else {
-    // 否则跳转到指定用户的主页
     router.push(`/profile/${userId}`)
   }
 }
 
-// 处理点赞
 const handleLike = (item) => {
   emit('likeContent', item)
 }
 
-// 处理操作菜单
 const handleAction = async (command, item) => {
   if (command === 'edit') {
     emit('editContent', item)
@@ -229,35 +197,28 @@ const handleAction = async (command, item) => {
       )
       emit('deleteContent', item)
     } catch {
-      // 用户取消删除
+      // 用户取消
     }
   }
 }
 
-// 滚动加载更多
 let isLoading = false
 let lastTriggerTime = 0
 
 const handleScroll = () => {
-  if (!props.hasMore || isLoading || props.loadingMore) {
-    return
-  }
-  
+  if (!props.hasMore || isLoading || props.loadingMore) return
+
   const now = Date.now()
-  if (now - lastTriggerTime < 1000) {
-    return
-  }
-  
+  if (now - lastTriggerTime < 1000) return
+
   const scrollTop = document.documentElement.scrollTop
   const scrollHeight = document.documentElement.scrollHeight
   const clientHeight = document.documentElement.clientHeight
-  
+
   if (scrollTop + clientHeight >= scrollHeight - 200) {
     isLoading = true
     lastTriggerTime = now
-    
     emit('loadMore')
-    
     setTimeout(() => {
       isLoading = false
     }, 2000)
@@ -269,7 +230,6 @@ const throttle = (func, delay) => {
   let lastExecTime = 0
   return function (...args) {
     const currentTime = Date.now()
-    
     if (currentTime - lastExecTime > delay) {
       func.apply(this, args)
       lastExecTime = currentTime
@@ -295,34 +255,14 @@ onUnmounted(() => {
   lastTriggerTime = 0
 })
 
-const formatDate = (dateString) => {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  const now = new Date()
-  const diff = now - date
-  
-  if (diff < 60000) return '刚刚'
-  if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`
-  if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`
-  if (diff < 2592000000) return `${Math.floor(diff / 86400000)}天前`
-  
-  return date.toLocaleDateString('zh-CN')
-}
-
-// 异步加载评论数
 const loadCommentCountAsync = async (contents, startIndex = 0) => {
-  // 逐个加载评论数
   for (let i = 0; i < contents.length; i++) {
     const content = contents[i]
     const contentIndex = startIndex + i
-    
+
     try {
       const response = await getContentCommentCount(content.id)
-      console.log(`内容${content.id}的评论数:`, response)
-      
-      // 立即更新对应位置的内容
       if (props.contentList[contentIndex]) {
-        // 直接修改 props.contentList 中的数据
         let commentCount = 0
         if (response && typeof response === 'object') {
           if (response.data !== undefined) {
@@ -335,115 +275,273 @@ const loadCommentCountAsync = async (contents, startIndex = 0) => {
         } else if (typeof response === 'number') {
           commentCount = response
         }
-        
-        // 触发父组件更新
         emit('updateCommentCount', content.id, commentCount)
       }
     } catch (error) {
       console.warn(`获取内容${content.id}评论数失败:`, error)
-      // 只记录警告日志，没有弹窗通知
     }
-    
-    // 添加小延迟，避免请求过于频繁
+
     await new Promise(resolve => setTimeout(resolve, 50))
   }
 }
 
-// 监听 contentList 变化，异步加载评论数
 watch(() => props.contentList, (newList) => {
   if (newList && newList.length > 0) {
     loadCommentCountAsync(newList)
   }
 }, { immediate: true })
-
-// 删除重复的 emit 声明
-// const emit = defineEmits(['contentClick', 'editContent', 'deleteContent', 'likeContent', 'loadMore', 'updateCommentCount'])
 </script>
 
 <style scoped>
+.content-grid {
+  padding: 16px;
+}
+
 /* 瀑布流容器 */
 .waterfall-container {
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
-  width: 100%;
-  box-sizing: border-box;
-  justify-content: flex-start;
 }
 
 /* 瀑布流项目 */
 .waterfall-item {
   flex: 0 0 auto;
-  break-inside: avoid;
-  margin-bottom: 0;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(155, 138, 160, 0.06);
+  border: 1px solid #F0EEF5;
+  transition: all 0.2s ease;
   opacity: 0;
-  animation: fadeInUp 0.6s ease forwards;
-  box-sizing: border-box;
+  animation: fadeInUp 0.5s ease forwards;
+  position: relative;
 }
 
-/* 响应式调整 - 精确控制列宽 */
+.waterfall-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(155, 138, 160, 0.12);
+  border-color: #E8E0ED;
+}
+
+/* 操作按钮 */
+.item-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.waterfall-item:hover .item-actions {
+  opacity: 1;
+}
+
+.action-btn {
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  border: none;
+  border-radius: 8px;
+  color: #6B7280;
+}
+
+.action-btn:hover {
+  background: white;
+  color: #9B8AA0;
+}
+
+/* 删除项 */
+.delete-item {
+  color: #DC6855;
+}
+
+/* 图片 */
+.item-image {
+  position: relative;
+  height: 180px;
+  overflow: hidden;
+}
+
+.item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+  transition: transform 0.3s ease;
+}
+
+.waterfall-item:hover .item-image img {
+  transform: scale(1.05);
+}
+
+.image-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(155, 138, 160, 0), rgba(155, 138, 160, 0.3));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.waterfall-item:hover .image-overlay {
+  opacity: 1;
+}
+
+.view-text {
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 5px 14px;
+  background: rgba(155, 138, 160, 0.8);
+  border-radius: 16px;
+  backdrop-filter: blur(4px);
+}
+
+/* 内容信息 */
+.item-content {
+  padding: 12px;
+}
+
+.item-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.author-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.author-row:hover {
+  background: #F8F7FA;
+}
+
+.author-name {
+  font-size: 11px;
+  color: #6B7280;
+}
+
+/* 标签 */
+.tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.tag {
+  font-size: 10px;
+  color: #9B8AA0;
+  background: #F3F0F5;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+/* 互动按钮 */
+.互动-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #F5F3F7;
+}
+
+.互动-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: #9CA3AF;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.互动-item:hover {
+  background: #F8F7FA;
+  color: #6B7280;
+}
+
+.互动-item.is-liked {
+  color: #D4A5A5;
+}
+
+/* 加载更多 */
+.loading-more,
+.no-more {
+  text-align: center;
+  padding: 20px 0;
+  color: #9CA3AF;
+  font-size: 13px;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 60px 0;
+}
+
+.empty-icon {
+  color: #D4D0DB;
+  margin-bottom: 12px;
+}
+
+.empty-text {
+  color: #9CA3AF;
+  font-size: 14px;
+}
+
+/* 响应式 */
 @media (max-width: 640px) {
   .waterfall-container {
     gap: 12px;
-    padding: 0 12px;
   }
   .waterfall-item {
     width: calc(50% - 6px);
   }
+  .item-image {
+    height: 140px;
+  }
 }
 
 @media (min-width: 641px) and (max-width: 768px) {
-  .waterfall-container {
-    gap: 14px;
-    padding: 0 16px;
-  }
   .waterfall-item {
-    width: calc(33.333% - 9.33px);
+    width: calc(33.333% - 10.66px);
   }
 }
 
 @media (min-width: 769px) and (max-width: 1024px) {
-  .waterfall-container {
-    gap: 16px;
-    padding: 0 20px;
-  }
   .waterfall-item {
     width: calc(25% - 12px);
   }
 }
 
-@media (min-width: 1025px) and (max-width: 1280px) {
-  .waterfall-container {
-    gap: 18px;
-    padding: 0 24px;
-  }
+@media (min-width: 1025px) {
   .waterfall-item {
-    width: calc(25% - 13.5px);
+    width: calc(20% - 12.8px);
   }
 }
 
-@media (min-width: 1281px) {
-  .waterfall-container {
-    gap: 20px;
-    padding: 0 28px;
-  }
-  .waterfall-item {
-    width: calc(20% - 16px);
-  }
-}
-
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-align: center !important;
-}
-
+/* 动画 */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
