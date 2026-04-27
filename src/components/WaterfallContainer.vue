@@ -134,15 +134,14 @@ onUnmounted(() => {
 
 <style scoped>
 .waterfall-container {
-  column-count: auto;
-  column-width: 280px;
-  column-gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
   padding: 0 6px;
 }
 
 .waterfall-item {
   break-inside: avoid;
-  margin-bottom: 16px;
   opacity: 0;
   animation: fadeInUp 0.5s ease forwards;
 }
