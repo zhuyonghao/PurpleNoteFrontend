@@ -258,6 +258,10 @@ const handleLogout = async () => {
   border: none;
 }
 
+:deep(.el-menu-item) {
+  padding-left: 0 !important;
+}
+
 .nav-item {
   height: auto;
   padding: 0;
@@ -268,6 +272,7 @@ const handleLogout = async () => {
 .nav-item-content {
   display: flex;
   align-items: center;
+  width: 100%;
   padding: 12px 16px;
   border-radius: 10px;
   transition: all 0.2s ease;
