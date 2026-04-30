@@ -1,11 +1,24 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { login as loginApi, register as registerApi, getUserProfile } from '@/api/user'
+import router from '@/router'
 
 export const useUserStore = defineStore('user', () => {
   const token = ref(localStorage.getItem('token') || '')
   const userInfo = ref(null)
   const isLoggedIn = ref(!!token.value)
+
+  // 用户角色: user, admin, auditor
+  const role = ref('')
+
+  // 是否是管理员
+  const isAdmin = computed(() => role.value === 'admin')
+
+  // 是否是审核员
+  const isAuditor = computed(() => role.value === 'auditor')
+
+  // 是否可以访问管理后台
+  const canAccessAdmin = computed(() => role.value === 'admin' || role.value === 'auditor')
 
   // 登录
   const loading = ref(false)
@@ -25,6 +38,10 @@ export const useUserStore = defineStore('user', () => {
       setTimeout(async () => {
         try {
           await fetchUserProfile()
+          // Login redirect: if user is admin or auditor, go to admin dashboard
+          if (role.value === 'admin' || role.value === 'auditor') {
+            router.push('/admin/dashboard')
+          }
         } catch (err) {
           console.warn('获取用户信息失败，但登录成功')
         }
@@ -54,6 +71,7 @@ export const useUserStore = defineStore('user', () => {
     try {
       const result = await getUserProfile()
       userInfo.value = result
+      role.value = result.role || 'user'  // 默认为普通用户
       return result
     } catch (error) {
       console.error('获取用户信息失败:', error)
@@ -72,6 +90,7 @@ export const useUserStore = defineStore('user', () => {
   const logout = () => {
     token.value = ''
     userInfo.value = null
+    role.value = ''
     isLoggedIn.value = false
     localStorage.removeItem('token')
   }
@@ -115,6 +134,10 @@ export const useUserStore = defineStore('user', () => {
     token,
     userInfo,
     isLoggedIn,
+    role,
+    isAdmin,
+    isAuditor,
+    canAccessAdmin,
     login,
     register,
     fetchUserProfile,
