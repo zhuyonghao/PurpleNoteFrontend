@@ -3,16 +3,6 @@
     <h2 class="page-title">内容管理</h2>
 
     <el-card>
-      <div class="filters">
-        <el-select v-model="filterStatus" placeholder="选择状态" clearable @change="handleFilterChange">
-          <el-option label="全部" :value="null" />
-          <el-option label="待审核" :value="0" />
-          <el-option label="通过" :value="1" />
-          <el-option label="驳回" :value="2" />
-          <el-option label="用户禁用" :value="3" />
-        </el-select>
-      </div>
-
       <ContentTable :contents="adminStore.contents" @view="handleViewContent" />
 
       <div class="pagination">
@@ -41,13 +31,11 @@ const adminStore = useAdminStore()
 
 const page = ref(1)
 const pageSize = ref(10)
-const filterStatus = ref(null)
 
 const loadContents = async () => {
   await adminStore.fetchContents({
     page: page.value,
-    pageSize: pageSize.value,
-    auditStatus: filterStatus.value
+    pageSize: pageSize.value
   })
 }
 
@@ -58,11 +46,6 @@ const handleSizeChange = (val) => {
 
 const handlePageChange = (val) => {
   page.value = val
-  loadContents()
-}
-
-const handleFilterChange = () => {
-  page.value = 1
   loadContents()
 }
 
@@ -84,10 +67,6 @@ onMounted(() => {
   margin: 0 0 20px 0;
   font-size: 24px;
   color: #333;
-}
-
-.filters {
-  margin-bottom: 16px;
 }
 
 .pagination {

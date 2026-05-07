@@ -7,7 +7,7 @@
         <span class="title">管理后台</span>
       </div>
       <div class="header-right">
-        <span class="admin-name">管理员: {{ userStore.userInfo?.nickname || '未知' }}</span>
+        <span class="admin-name">{{ userStore.isAuditor ? '审核员' : '管理员' }}: {{ userStore.userInfo?.username || '未知' }}</span>
         <el-button type="danger" size="small" @click="handleLogout">退出</el-button>
       </div>
     </el-header>

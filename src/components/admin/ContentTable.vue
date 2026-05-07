@@ -2,7 +2,7 @@
   <el-table :data="contents" border style="width: 100%">
     <el-table-column prop="title" label="标题" min-width="200" show-overflow-tooltip />
 
-    <el-table-column prop="authorNickname" label="作者" width="120" />
+    <el-table-column prop="userName" label="作者" width="120" />
 
     <el-table-column prop="auditStatus" label="状态" width="120">
       <template #default="{ row }">

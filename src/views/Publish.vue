@@ -62,7 +62,18 @@
                 show-word-limit
                 size="large"
                 class="title-input"
-              />
+              >
+                <template #append>
+                  <el-button
+                    :loading="generating"
+                    :disabled="!canGenerateTitle"
+                    @click="handleGenerateTitle"
+                    title="AI生成标题"
+                  >
+                    <el-icon><Tickets /></el-icon>
+                  </el-button>
+                </template>
+              </el-input>
             </el-form-item>
 
             <!-- 内容描述 -->
@@ -78,6 +89,19 @@
                 class="content-input"
               />
             </el-form-item>
+
+            <!-- AI 润色按钮 -->
+            <el-form-item>
+              <el-button
+                :loading="polishing"
+                :disabled="!canPolish"
+                @click="handlePolish"
+                class="ai-btn"
+              >
+                <el-icon><MagicStick /></el-icon>
+                AI 润色
+              </el-button>
+            </el-form-item>
           </el-form>
         </div>
       </div>
@@ -92,13 +116,16 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { createContent } from '@/api/content'
-import { UploadFilled, Delete, ArrowLeft } from '@element-plus/icons-vue'
+import { polishContent, generateTitle } from '@/api/ai'
+import { UploadFilled, Delete, ArrowLeft, MagicStick, Tickets } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const userStore = useUserStore()
 
 const publishFormRef = ref()
 const publishing = ref(false)
+const polishing = ref(false)
+const generating = ref(false)
 
 const publishForm = reactive({
   title: '',
@@ -149,6 +176,48 @@ const uploadHeaders = computed(() => ({
 const canPublish = computed(() => {
   return publishForm.title && publishForm.content && publishForm.imageUrl
 })
+
+const canPolish = computed(() => {
+  return publishForm.content.trim().length > 0 && !polishing.value
+})
+
+const canGenerateTitle = computed(() => {
+  return publishForm.content.trim().length > 0 && !generating.value && !publishForm.title
+})
+
+const handlePolish = async () => {
+  if (!publishForm.content.trim()) {
+    ElMessage.warning('请先输入内容')
+    return
+  }
+  try {
+    polishing.value = true
+    const res = await polishContent({ originalContent: publishForm.content })
+    publishForm.content = res.polishedContent
+    ElMessage.success('内容润色完成')
+  } catch (error) {
+    ElMessage.error('润色失败')
+  } finally {
+    polishing.value = false
+  }
+}
+
+const handleGenerateTitle = async () => {
+  if (!publishForm.content.trim()) {
+    ElMessage.warning('请先输入内容')
+    return
+  }
+  try {
+    generating.value = true
+    const res = await generateTitle({ content: publishForm.content })
+    publishForm.title = res.recommendedTitle
+    ElMessage.success('标题生成完成')
+  } catch (error) {
+    ElMessage.error('标题生成失败')
+  } finally {
+    generating.value = false
+  }
+}
 
 const beforeUpload = (file) => {
   const isImage = file.type.startsWith('image/')
@@ -344,5 +413,9 @@ const removeImage = () => {
 .content-input :deep(.el-input__count) {
   background: transparent;
   color: #B4A5BE;
+}
+
+.ai-btn {
+  margin-top: 12px;
 }
 </style>

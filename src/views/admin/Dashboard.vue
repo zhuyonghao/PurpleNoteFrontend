@@ -1,123 +1,72 @@
 <template>
   <div class="dashboard">
-    <h2 class="page-title">仪表盘</h2>
-
-    <!-- Admin 视角 -->
-    <div v-if="userStore.isAdmin" class="stats-grid">
-      <el-card class="stat-card">
-        <template #header>
-          <div class="card-header">
-            <span>用户统计</span>
-          </div>
-        </template>
-        <div class="stat-value">{{ stats.users }}</div>
-        <div class="stat-label">总用户数</div>
-      </el-card>
-
-      <el-card class="stat-card">
-        <template #header>
-          <div class="card-header">
-            <span>内容统计</span>
-          </div>
-        </template>
-        <div class="stat-value">{{ stats.contents }}</div>
-        <div class="stat-label">总内容数</div>
-      </el-card>
-
-      <el-card class="stat-card">
-        <template #header>
-          <div class="card-header">
-            <span>待审核</span>
-          </div>
-        </template>
-        <div class="stat-value">{{ stats.pending }}</div>
-        <div class="stat-label">待审核内容</div>
-      </el-card>
-    </div>
-
-    <!-- Auditor 视角 -->
-    <div v-if="userStore.isAuditor" class="stats-grid">
-      <el-card class="stat-card">
-        <template #header>
-          <div class="card-header">
-            <span>待审核</span>
-          </div>
-        </template>
-        <div class="stat-value">{{ stats.pending }}</div>
-        <div class="stat-label">待审核内容</div>
-      </el-card>
-
-      <el-card class="stat-card">
-        <template #header>
-          <div class="card-header">
-            <span>今日已审核</span>
-          </div>
-        </template>
-        <div class="stat-value">{{ stats.todayApproved }}</div>
-        <div class="stat-label">今日通过</div>
-      </el-card>
-
-      <el-card class="stat-card">
-        <template #header>
-          <div class="card-header">
-            <span>本月已审核</span>
-          </div>
-        </template>
-        <div class="stat-value">{{ stats.monthApproved }}</div>
-        <div class="stat-label">本月通过</div>
-      </el-card>
+    <!-- 欢迎区域 -->
+    <div class="welcome-section">
+      <div class="welcome-content">
+        <h1 class="welcome-title">{{ greeting }}，{{ userStore.userInfo?.username || '管理员' }}</h1>
+        <p class="welcome-subtitle">{{ userStore.isAuditor ? '审核员' : '管理员' }}控制台</p>
+      </div>
+      <div class="welcome-decoration">
+        <div class="decoration-circle circle-1"></div>
+        <div class="decoration-circle circle-2"></div>
+        <div class="decoration-circle circle-3"></div>
+      </div>
     </div>
 
     <!-- 快捷入口 -->
     <div class="quick-actions">
-      <h3>快捷入口</h3>
+      <h3 class="section-title">快捷入口</h3>
       <div class="action-cards">
-        <el-card v-if="userStore.isAdmin" class="action-card" @click="router.push('/admin/users')">
-          <el-icon :size="32"><User /></el-icon>
-          <span>用户管理</span>
-        </el-card>
+        <div v-if="userStore.isAdmin" class="action-card" @click="router.push('/admin/users')">
+          <div class="card-icon-wrapper user-icon">
+            <el-icon :size="28"><User /></el-icon>
+          </div>
+          <span class="card-label">用户管理</span>
+          <span class="card-desc">管理平台用户</span>
+        </div>
 
-        <el-card v-if="userStore.isAdmin" class="action-card" @click="router.push('/admin/contents')">
-          <el-icon :size="32"><Document /></el-icon>
-          <span>内容管理</span>
-        </el-card>
+        <div v-if="userStore.isAdmin" class="action-card" @click="router.push('/admin/contents')">
+          <div class="card-icon-wrapper content-icon">
+            <el-icon :size="28"><Document /></el-icon>
+          </div>
+          <span class="card-label">内容管理</span>
+          <span class="card-desc">审核与发布内容</span>
+        </div>
 
-        <el-card v-if="userStore.isAuditor" class="action-card" @click="router.push('/admin/audit')">
-          <el-icon :size="32"><Search /></el-icon>
-          <span>审核台</span>
-        </el-card>
+        <div v-if="userStore.isAuditor" class="action-card" @click="router.push('/admin/audit')">
+          <div class="card-icon-wrapper audit-icon">
+            <el-icon :size="28"><Search /></el-icon>
+          </div>
+          <span class="card-label">内容审核</span>
+          <span class="card-desc">待审核内容</span>
+        </div>
+
+        <div class="action-card" @click="router.push('/home')">
+          <div class="card-icon-wrapper home-icon">
+            <el-icon :size="28"><HomeFilled /></el-icon>
+          </div>
+          <span class="card-label">用户界面</span>
+          <span class="card-desc">返回前台首页</span>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { User, Document, Search } from '@element-plus/icons-vue'
+import { User, Document, Search, HomeFilled } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const userStore = useUserStore()
 
-const stats = ref({
-  users: 0,
-  contents: 0,
-  pending: 0,
-  todayApproved: 0,
-  monthApproved: 0
-})
-
-onMounted(() => {
-  // TODO: 调用统计 API 获取数据
-  // 这里暂时使用模拟数据
-  stats.value = {
-    users: 128,
-    contents: 456,
-    pending: 12,
-    todayApproved: 8,
-    monthApproved: 156
-  }
+const greeting = computed(() => {
+  const hour = new Date().getHours()
+  if (hour < 12) return '早上好'
+  if (hour < 18) return '下午好'
+  return '晚上好'
 })
 </script>
 
@@ -126,68 +75,141 @@ onMounted(() => {
   padding: 0;
 }
 
-.page-title {
-  margin: 0 0 20px 0;
-  font-size: 24px;
-  color: #333;
+/* 欢迎区域 */
+.welcome-section {
+  position: relative;
+  background: linear-gradient(135deg, #9774e4 0%, #b9a2f6 100%);
+  border-radius: 16px;
+  padding: 32px 40px;
+  margin-bottom: 32px;
+  overflow: hidden;
+  color: #fff;
 }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-bottom: 30px;
+.welcome-content {
+  position: relative;
+  z-index: 2;
 }
 
-.stat-card {
-  text-align: center;
+.welcome-title {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 600;
 }
 
-.card-header {
-  text-align: center;
-}
-
-.stat-value {
-  font-size: 36px;
-  font-weight: bold;
-  color: #9774e4;
-  margin: 10px 0;
-}
-
-.stat-label {
-  color: #999;
+.welcome-subtitle {
+  margin: 0;
   font-size: 14px;
+  opacity: 0.9;
 }
 
-.quick-actions h3 {
-  margin: 0 0 16px 0;
+.welcome-decoration {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 50%;
+  overflow: hidden;
+}
+
+.decoration-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.circle-1 {
+  width: 200px;
+  height: 200px;
+  top: -80px;
+  right: -40px;
+}
+
+.circle-2 {
+  width: 150px;
+  height: 150px;
+  top: 20px;
+  right: 80px;
+}
+
+.circle-3 {
+  width: 100px;
+  height: 100px;
+  bottom: -40px;
+  right: 160px;
+}
+
+/* 快捷入口 */
+.section-title {
+  margin: 0 0 20px 0;
+  font-size: 16px;
+  font-weight: 500;
   color: #333;
 }
 
 .action-cards {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 20px;
 }
 
 .action-card {
-  width: 150px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px 20px;
   text-align: center;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
+  border: 1px solid #f0f0f0;
 }
 
 .action-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 24px rgba(151, 116, 228, 0.15);
+  border-color: #9774e4;
 }
 
-.action-card .el-icon {
-  color: #9774e4;
-  margin-bottom: 10px;
+.card-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
 }
 
-.action-card span {
+.user-icon {
+  background: linear-gradient(135deg, #e4e6f0 0%, #d0d3e8 100%);
+  color: #6b7280;
+}
+
+.content-icon {
+  background: linear-gradient(135deg, #fce7f3 0%, #f9a8d4 100%);
+  color: #db2777;
+}
+
+.audit-icon {
+  background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
+  color: #d97706;
+}
+
+.home-icon {
+  background: linear-gradient(135deg, #d1fae5 0%, #6ee7b7 100%);
+  color: #059669;
+}
+
+.card-label {
   display: block;
-  color: #666;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.card-desc {
+  display: block;
+  font-size: 12px;
+  color: #999;
 }
 </style>

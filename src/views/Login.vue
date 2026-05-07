@@ -90,7 +90,12 @@ const handleLogin = async () => {
       try {
         await userStore.login(loginForm)
         ElMessage.success('登录成功')
-        router.push('/home')
+        // 登录成功后根据角色跳转
+        if (userStore.isAdmin || userStore.isAuditor) {
+          router.replace('/admin/dashboard')
+        } else {
+          router.replace('/home')
+        }
       } catch (error) {
         console.error('登录失败:', error)
       } finally {

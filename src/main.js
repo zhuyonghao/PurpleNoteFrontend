@@ -6,6 +6,7 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import router from './router'
 import App from './App.vue'
 import './style.css'
+import { useUserStore } from './stores/user'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -18,4 +19,9 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 app.use(pinia)
 app.use(router)
 app.use(ElementPlus) // ElementPlus 已经包含了所有指令，包括 v-infinite-scroll
+
+// 初始化用户状态（从 localStorage 恢复）
+const userStore = useUserStore()
+userStore.initializeUser()
+
 app.mount('#app')

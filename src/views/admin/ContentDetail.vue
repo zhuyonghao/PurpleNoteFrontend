@@ -8,35 +8,34 @@
         <h3>基本信息</h3>
         <el-descriptions :column="2" border>
           <el-descriptions-item label="标题">{{ content.title }}</el-descriptions-item>
-          <el-descriptions-item label="作者">{{ content.authorNickname }}</el-descriptions-item>
+          <el-descriptions-item label="作者">
+            <el-avatar :src="content.userAvatarUrl" :size="24" />
+            {{ content.userName }}
+          </el-descriptions-item>
           <el-descriptions-item label="状态">
             <el-tag :type="getStatusTagType(content.auditStatus)">
               {{ getStatusLabel(content.auditStatus) }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="发布时间">{{ content.createdAt }}</el-descriptions-item>
+          <el-descriptions-item label="发布时间">{{ formatDate(content.createdAt) }}</el-descriptions-item>
         </el-descriptions>
       </div>
 
       <!-- 内容正文 -->
       <div class="info-section">
         <h3>正文内容</h3>
-        <div class="content-text">{{ content.content }}</div>
+        <div class="content-text">{{ content.text }}</div>
       </div>
 
       <!-- 媒体 -->
-      <div v-if="content.mediaUrls?.length" class="info-section">
+      <div v-if="content.mediaUrl" class="info-section">
         <h3>媒体</h3>
-        <div class="media-grid">
-          <el-image
-            v-for="(url, index) in content.mediaUrls"
-            :key="index"
-            :src="url"
-            :preview-src-list="content.mediaUrls"
-            fit="cover"
-            class="media-item"
-          />
-        </div>
+        <el-image
+          :src="content.mediaUrl"
+          :preview-src-list="[content.mediaUrl]"
+          fit="cover"
+          class="media-item"
+        />
       </div>
 
       <!-- 审核操作（仅 auditor 可操作） -->
@@ -70,6 +69,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { useAdminStore } from '@/stores/admin'
+import { getContent } from '@/api/content'
 
 const route = useRoute()
 const router = useRouter()
@@ -91,17 +91,25 @@ const statusMap = {
 const getStatusLabel = (status) => statusMap[status]?.label || '未知'
 const getStatusTagType = (status) => statusMap[status]?.type || 'info'
 
+const formatDate = (dateStr) => {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
 const loadContent = async () => {
-  // TODO: 调用获取内容详情的 API
-  // 暂时使用模拟数据
-  content.value = {
-    id: contentId,
-    title: '示例标题',
-    content: '示例正文内容...',
-    authorNickname: '示例作者',
-    auditStatus: 0,
-    createdAt: '2026-04-30 12:00:00',
-    mediaUrls: []
+  try {
+    const res = await getContent(contentId)
+    content.value = res
+  } catch (error) {
+    ElMessage.error('获取内容详情失败')
+    router.back()
   }
 }
 
@@ -166,15 +174,8 @@ onMounted(() => {
   white-space: pre-wrap;
 }
 
-.media-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-}
-
 .media-item {
-  width: 120px;
-  height: 120px;
+  max-width: 400px;
   border-radius: 8px;
 }
 

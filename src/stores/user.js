@@ -11,6 +11,9 @@ export const useUserStore = defineStore('user', () => {
   // 用户角色: user, admin, auditor
   const role = ref('')
 
+  // 用户状态是否已初始化
+  const isInitialized = ref(false)
+
   // 是否是管理员
   const isAdmin = computed(() => role.value === 'admin')
 
@@ -34,19 +37,13 @@ export const useUserStore = defineStore('user', () => {
       localStorage.setItem('token', result)
       isLoggedIn.value = true
       
-      // 延迟获取用户信息，避免立即失败
-      setTimeout(async () => {
-        try {
-          await fetchUserProfile()
-          // Login redirect: if user is admin or auditor, go to admin dashboard
-          if (role.value === 'admin' || role.value === 'auditor') {
-            router.push('/admin/dashboard')
-          }
-        } catch (err) {
-          console.warn('获取用户信息失败，但登录成功')
-        }
-      }, 100)
-      
+      // 立即获取用户信息，用于登录后跳转
+      try {
+        await fetchUserProfile()
+      } catch (err) {
+        console.warn('获取用户信息失败，但登录成功')
+      }
+
       return result
     } catch (err) {
       error.value = err.message
@@ -72,9 +69,11 @@ export const useUserStore = defineStore('user', () => {
       const result = await getUserProfile()
       userInfo.value = result
       role.value = result.role || 'user'  // 默认为普通用户
+      isInitialized.value = true
       return result
     } catch (error) {
       console.error('获取用户信息失败:', error)
+      isInitialized.value = true  // 即使失败也标记为已初始化，避免一直等待
       // 如果是用户不存在或token无效，自动登出
       if (error.message?.includes('用户不存在') || error.response?.status === 401) {
         ElMessage.warning('登录状态已失效，请重新登录')
@@ -92,6 +91,7 @@ export const useUserStore = defineStore('user', () => {
     userInfo.value = null
     role.value = ''
     isLoggedIn.value = false
+    isInitialized.value = false
     localStorage.removeItem('token')
   }
 
@@ -137,6 +137,7 @@ export const useUserStore = defineStore('user', () => {
     role,
     isAdmin,
     isAuditor,
+    isInitialized,
     canAccessAdmin,
     login,
     register,

@@ -90,7 +90,7 @@ const routes = [
   {
     path: '/admin',
     component: () => import('@/views/admin/index.vue'),
-    meta: { requiresAdmin: true },
+    meta: { requiresAdminAccess: true },  // 允许 admin 或 auditor 访问
     children: [
       {
         path: '',
@@ -141,11 +141,16 @@ const router = createRouter({
 })
 
 // 路由前置守卫
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
 
+  // 如果已登录但未初始化，先等待初始化完成
+  if (userStore.isLoggedIn && !userStore.isInitialized) {
+    await userStore.initializeUser()
+  }
+
   // 管理后台权限检查
-  if (to.meta.requiresAdmin || to.meta.requiresAuditor) {
+  if (to.meta.requiresAdmin || to.meta.requiresAuditor || to.meta.requiresAdminAccess) {
     if (!userStore.isLoggedIn) {
       ElMessage.warning('请先登录')
       next('/login')
@@ -158,12 +163,21 @@ router.beforeEach((to, from, next) => {
       return
     }
 
+    // requiresAdminAccess: 允许 admin 或 auditor 访问（用于父路由）
+    if (to.meta.requiresAdminAccess && !userStore.isAdmin && !userStore.isAuditor) {
+      ElMessage.warning('您没有权限访问管理后台')
+      next('/home')
+      return
+    }
+
+    // requiresAdmin: 仅允许 admin 访问
     if (to.meta.requiresAdmin && !userStore.isAdmin) {
       ElMessage.warning('此功能仅管理员可用')
       next('/admin/dashboard')
       return
     }
 
+    // requiresAuditor: 仅允许 auditor 访问
     if (to.meta.requiresAuditor && !userStore.isAuditor) {
       ElMessage.warning('此功能仅审核员可用')
       next('/admin/dashboard')

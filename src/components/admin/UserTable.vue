@@ -6,7 +6,7 @@
       </template>
     </el-table-column>
 
-    <el-table-column prop="nickname" label="昵称" min-width="120" />
+    <el-table-column prop="username" label="用户名" min-width="120" />
 
     <el-table-column prop="role" label="角色" width="100">
       <template #default="{ row }">
@@ -65,7 +65,7 @@ const getRoleTagType = (role) => {
 const handleToggleStatus = async (row) => {
   try {
     await ElMessageBox.confirm(
-      `确定要${row.status === 0 ? '禁用' : '启用'}用户 "${row.nickname}" 吗？`,
+      `确定要${row.status === 0 ? '禁用' : '启用'}用户 "${row.username}" 吗？`,
       '确认',
       { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
     )
